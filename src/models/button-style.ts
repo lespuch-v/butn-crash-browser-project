@@ -90,6 +90,20 @@ const SYMBOL_POOL = [
 
 const FONT_FAMILIES = ['sans-serif', 'monospace', 'serif', 'cursive'];
 
+const RETRO_TEXT = [
+  "Don't touch!",
+  "Nope",
+  "Hands off!",
+  "Not this one.",
+  "Nice try",
+  "Absolutely not",
+  "BOOM 💣"
+]
+
+function randomPick<T>(arr: readonly T[]): T {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
 // ── Helpers ──────────────────────────────────────────
 
 function pick<T>(arr: T[]): T {
@@ -257,7 +271,7 @@ export function retroInitialStyle(): ButtonStyle {
     width: 116,
     height: 56,
     content: {
-      text: 'Don"t touch!',
+      text: randomPick(RETRO_TEXT),
       fontSize: 0.35,
       fontFamily: 'serif',
       color: '#111111',
