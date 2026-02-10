@@ -16,7 +16,7 @@ export const MassSpawnModifier: Modifier = {
     const cellsToSpawn: { col: number; row: number }[] = [];
 
     // Spiral outward from clicked position
-    for (let ring = 1; cellsToSpawn.length < count; ring++) {
+    for (let ring = 1; cellsToSpawn.length < count && ring <= 20; ring++) {
       for (const dir of ALL_DIRECTIONS) {
         const vec = DIRECTION_VECTORS[dir];
         // Walk along each direction for this ring distance

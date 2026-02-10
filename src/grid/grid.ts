@@ -1,6 +1,5 @@
-import type { Entity } from '@ecs/entity';
 import { CELL_SIZE } from '../constants';
-import { ALL_DIRECTIONS, DIRECTION_VECTORS, type Direction } from '@models/direction';
+import { ALL_DIRECTIONS, Direction, DIRECTION_VECTORS } from '@models/direction';
 
 /**
  * Logical grid backed by a Map for O(1) lookups.
@@ -116,6 +115,119 @@ export class Grid {
       row += vec.y;
     }
     return null;
+  }
+
+  // ── Span operations ─────────────────────────
+
+  /** Place an entity across multiple cells. Anchor is top-left. */
+  setSpan(col: number, row: number, colSpan: number, rowSpan: number, entityId: number): void {
+    for (let dc = 0; dc < colSpan; dc++) {
+      for (let dr = 0; dr < rowSpan; dr++) {
+        this.cells.set(this.key(col + dc, row + dr), entityId);
+      }
+    }
+  }
+
+  /** Remove an entity from all its spanned cells */
+  removeSpan(col: number, row: number, colSpan: number, rowSpan: number): void {
+    for (let dc = 0; dc < colSpan; dc++) {
+      for (let dr = 0; dr < rowSpan; dr++) {
+        this.cells.delete(this.key(col + dc, row + dr));
+      }
+    }
+  }
+
+  /** Check if all cells in a span are free */
+  isSpanFree(col: number, row: number, colSpan: number, rowSpan: number): boolean {
+    for (let dc = 0; dc < colSpan; dc++) {
+      for (let dr = 0; dr < rowSpan; dr++) {
+        if (this.isOccupied(col + dc, row + dr)) return false;
+      }
+    }
+    return true;
+  }
+
+  /** Center pixel position of a multi-cell span */
+  spanCenter(col: number, row: number, colSpan: number, rowSpan: number): { x: number; y: number } {
+    return {
+      x: col * this.cellSize + (colSpan * this.cellSize) / 2,
+      y: row * this.cellSize + (rowSpan * this.cellSize) / 2,
+    };
+  }
+
+  /** Find first free span-sized region walking in a direction */
+  findFreeSpanInDirection(
+    startCol: number,
+    startRow: number,
+    direction: Direction,
+    colSpan: number,
+    rowSpan: number,
+    maxSteps: number = 50,
+  ): { col: number; row: number } | null {
+    const vec = DIRECTION_VECTORS[direction];
+    let col = startCol + vec.x;
+    let row = startRow + vec.y;
+
+    for (let i = 0; i < maxSteps; i++) {
+      if (this.isSpanFree(col, row, colSpan, rowSpan)) {
+        return { col, row };
+      }
+      col += vec.x;
+      row += vec.y;
+    }
+    return null;
+  }
+
+  /** Get free cells adjacent to an entity's full bounding box (for spawn previews) */
+  freeNeighborsAroundSpan(
+    col: number,
+    row: number,
+    colSpan: number,
+    rowSpan: number,
+  ): { col: number; row: number; direction: Direction }[] {
+    const result: { col: number; row: number; direction: Direction }[] = [];
+
+    // Top edge: row - 1, across all columns of the span
+    for (let dc = 0; dc < colSpan; dc++) {
+      const c = col + dc;
+      const r = row - 1;
+      if (this.isFree(c, r)) {
+        result.push({ col: c, row: r, direction: Direction.Up });
+        break;
+      }
+    }
+
+    // Bottom edge: row + rowSpan, across all columns
+    for (let dc = 0; dc < colSpan; dc++) {
+      const c = col + dc;
+      const r = row + rowSpan;
+      if (this.isFree(c, r)) {
+        result.push({ col: c, row: r, direction: Direction.Down });
+        break;
+      }
+    }
+
+    // Left edge: col - 1, across all rows of the span
+    for (let dr = 0; dr < rowSpan; dr++) {
+      const c = col - 1;
+      const r = row + dr;
+      if (this.isFree(c, r)) {
+        result.push({ col: c, row: r, direction: Direction.Left });
+        break;
+      }
+    }
+
+    // Right edge: col + colSpan, across all rows
+    for (let dr = 0; dr < rowSpan; dr++) {
+      const c = col + colSpan;
+      const r = row + dr;
+      if (this.isFree(c, r)) {
+        result.push({ col: c, row: r, direction: Direction.Right });
+        break;
+      }
+    }
+
+    return result;
   }
 
   // ── Bulk operations ──────────────────────────

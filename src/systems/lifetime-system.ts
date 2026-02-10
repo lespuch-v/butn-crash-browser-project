@@ -20,13 +20,14 @@ export class LifetimeSystem {
       lifetime.elapsed += dt;
 
       if (lifetime.elapsed >= lifetime.ttl) {
-        // Remove from grid if it has a grid cell
+        // Remove from grid if it has a grid cell (span-aware)
         if (entity.gridCell) {
-          this.grid.remove(entity.gridCell.col, entity.gridCell.row);
+          const gc = entity.gridCell;
+          this.grid.removeSpan(gc.col, gc.row, gc.colSpan, gc.rowSpan);
           this.bus.emit('button:destroyed', {
             entityId: entity.id,
-            col: entity.gridCell.col,
-            row: entity.gridCell.row,
+            col: gc.col,
+            row: gc.row,
           });
         }
 
