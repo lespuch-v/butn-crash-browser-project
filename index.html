@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Button Chaos</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      html, body {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #0a0a0f;
+        font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      }
+
+      #game-container {
+        position: relative;
+        width: 100vw;
+        height: 100vh;
+      }
+
+      #game-canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+        cursor: pointer;
+      }
+
+      #hud {
+        position: absolute;
+        top: 16px;
+        left: 16px;
+        color: #ffffff;
+        font-size: 14px;
+        pointer-events: none;
+        z-index: 10;
+      }
+
+      #hud .stat {
+        margin-bottom: 4px;
+        opacity: 0.7;
+      }
+
+      #modifier-flash {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: #ffd700;
+        font-size: 32px;
+        font-weight: 700;
+        pointer-events: none;
+        opacity: 0;
+        z-index: 20;
+        text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+        transition: opacity 0.3s ease;
+      }
+
+      #modifier-flash.visible {
+        opacity: 1;
+      }
+
+      #debug-panel {
+        position: absolute;
+        bottom: 16px;
+        right: 16px;
+        color: #666;
+        font-size: 11px;
+        font-family: 'Courier New', monospace;
+        pointer-events: none;
+        z-index: 10;
+        text-align: right;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="game-container">
+      <canvas id="game-canvas"></canvas>
+
+      <div id="hud">
+        <div class="stat">Buttons: <span id="hud-count">1</span></div>
+        <div class="stat">Clicks: <span id="hud-clicks">0</span></div>
+      </div>
+
+      <div id="modifier-flash"></div>
+
+      <div id="debug-panel">
+        <div>FPS: <span id="debug-fps">0</span></div>
+        <div>Entities: <span id="debug-entities">0</span></div>
+      </div>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
