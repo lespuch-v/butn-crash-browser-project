@@ -1,211 +1,220 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Button Chaos</title>
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <style>
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
 
-      html, body {
-        width: 100%;
-        height: 100%;
-        overflow: hidden;
-        background: #0a0a0f;
-        font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-      }
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Button Chaos</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
-      #game-container {
-        position: relative;
-        width: 100vw;
-        height: 100vh;
-      }
+    :root {
+      --glass-bg: rgba(15, 23, 42, 0.48);
+      --glass-border: rgba(148, 163, 184, 0.28);
+      --glass-highlight: rgba(191, 219, 254, 0.24);
+      --text-primary: #f8fbff;
+      --text-muted: rgba(214, 224, 255, 0.72);
+      --accent-cyan: #7dd3fc;
+    }
 
-      #game-canvas {
-        display: block;
-        width: 100%;
-        height: 100%;
-        cursor: pointer;
-      }
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 20% 10%, rgba(14, 116, 144, 0.14), transparent 45%),
+        radial-gradient(circle at 78% 16%, rgba(30, 58, 138, 0.2), transparent 42%),
+        #070a12;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    }
 
-      #hud {
+    #game-container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    #game-canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      cursor: pointer;
+    }
+
+      #top-navbar {
         position: absolute;
-        top: 16px;
-        left: 16px;
-        color: #ffffff;
-        font-size: 14px;
+        top: 14px;
+        left: 14px;
+        right: 14px;
+        z-index: 40;
         pointer-events: none;
-        z-index: 10;
       }
 
-      #hud .stat {
-        margin-bottom: 4px;
-        opacity: 0.7;
+    #top-navbar .nav-shell {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 10px 14px;
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      background:
+        linear-gradient(120deg, rgba(15, 23, 42, 0.62), rgba(15, 23, 42, 0.35)),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent 35%);
+      box-shadow:
+        0 12px 30px rgba(2, 8, 23, 0.35),
+        inset 0 1px 0 var(--glass-highlight);
+      backdrop-filter: blur(16px) saturate(130%);
+      -webkit-backdrop-filter: blur(16px) saturate(130%);
+    }
+
+    #top-navbar .brand {
+      color: var(--text-primary);
+      font-weight: 700;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+      font-size: 12px;
+      text-shadow: 0 0 14px rgba(125, 211, 252, 0.24);
+    }
+
+    #top-navbar .stats {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    #top-navbar .stat-card {
+      min-width: 92px;
+      padding: 8px 10px;
+      border-radius: 11px;
+      border: 1px solid rgba(186, 230, 253, 0.14);
+      background: linear-gradient(145deg, rgba(30, 41, 59, 0.46), rgba(15, 23, 42, 0.27));
+    }
+
+    #top-navbar .stat-label {
+      color: var(--text-muted);
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 2px;
+    }
+
+    #top-navbar .stat-value {
+      color: var(--text-primary);
+      font-size: 18px;
+      font-weight: 700;
+      line-height: 1.1;
+    }
+
+    #top-navbar .stat-value.accent {
+      color: var(--accent-cyan);
+    }
+
+    #modifier-flash {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: #ffd700;
+      font-size: 32px;
+      font-weight: 700;
+      pointer-events: none;
+      opacity: 0;
+      z-index: 20;
+      text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+      transition: opacity 0.3s ease;
+    }
+
+    #modifier-flash.visible {
+      opacity: 1;
+    }
+
+    #debug-panel {
+      position: absolute;
+      bottom: 16px;
+      right: 16px;
+      color: #666;
+      font-size: 11px;
+      font-family: 'Courier New', monospace;
+      pointer-events: none;
+      z-index: 10;
+      text-align: right;
+    }
+
+    @media (max-width: 700px) {
+      #top-navbar .nav-shell {
+        padding: 10px 11px;
+        gap: 10px;
+        border-radius: 13px;
       }
 
-      #modifier-flash {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        color: #ffd700;
-        font-size: 32px;
-        font-weight: 700;
-        pointer-events: none;
-        opacity: 0;
-        z-index: 20;
-        text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
-        transition: opacity 0.3s ease;
-      }
-
-      #modifier-flash.visible {
-        opacity: 1;
-      }
-
-      #debug-panel {
-        position: absolute;
-        bottom: 16px;
-        right: 16px;
-        color: #666;
+      #top-navbar .brand {
         font-size: 11px;
-        font-family: 'Courier New', monospace;
-        pointer-events: none;
-        z-index: 10;
-        text-align: right;
+        letter-spacing: 0.06em;
       }
 
-      @keyframes pan-breathe {
-        0%, 100% { border-color: rgba(125, 211, 252, 0.12); }
-        50% { border-color: rgba(125, 211, 252, 0.22); }
+      #top-navbar .stats {
+        gap: 6px;
       }
 
-      .pan-arrow {
-        --glow: rgba(125, 211, 252, 0.35);
-        position: absolute;
-        width: 44px;
-        height: 44px;
-        border: 1px solid rgba(125, 211, 252, 0.12);
-        border-radius: 50%;
-        background: radial-gradient(circle, rgba(15, 23, 42, 0.6) 0%, transparent 70%);
-        color: rgba(186, 230, 253, 0.45);
-        font-size: 18px;
-        font-weight: 300;
-        line-height: 1;
-        display: grid;
-        place-items: center;
-        cursor: pointer;
-        z-index: 30;
-        box-shadow: none;
-        backdrop-filter: blur(2px);
-        animation: pan-breathe 4s ease-in-out infinite;
-        transition:
-          color 0.25s ease,
-          border-color 0.25s ease,
-          background 0.25s ease,
-          box-shadow 0.3s ease,
-          transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+      #top-navbar .stat-card {
+        min-width: 72px;
+        padding: 6px 8px;
+        border-radius: 9px;
       }
 
-      .pan-arrow:hover {
-        color: rgba(240, 249, 255, 0.95);
-        border-color: rgba(125, 211, 252, 0.5);
-        background: radial-gradient(circle, rgba(14, 165, 233, 0.1) 0%, transparent 70%);
-        box-shadow:
-          0 0 20px rgba(56, 189, 248, 0.15),
-          0 0 40px rgba(56, 189, 248, 0.05);
-        animation: none;
+      #top-navbar .stat-label {
+        font-size: 9px;
       }
 
-      .pan-arrow:active {
-        color: rgba(186, 230, 253, 0.7);
-        border-color: rgba(125, 211, 252, 0.6);
-        box-shadow:
-          0 0 12px rgba(56, 189, 248, 0.25),
-          inset 0 0 8px rgba(56, 189, 248, 0.1);
-        transition-duration: 0.06s;
+      #top-navbar .stat-value {
+        font-size: 16px;
       }
 
-      .pan-arrow:focus-visible {
-        outline: 1px solid rgba(125, 211, 252, 0.7);
-        outline-offset: 3px;
-      }
+    }
+  </style>
+</head>
 
-      #pan-up {
-        top: 18px;
-        left: 50%;
-        transform: translateX(-50%);
-      }
-      #pan-up:hover {
-        transform: translateX(-50%) translateY(-3px);
-      }
-      #pan-up:active {
-        transform: translateX(-50%) translateY(1px) scale(0.92);
-      }
+<body>
+  <div id="game-container">
+    <canvas id="game-canvas"></canvas>
 
-      #pan-down {
-        bottom: 18px;
-        left: 50%;
-        transform: translateX(-50%);
-      }
-      #pan-down:hover {
-        transform: translateX(-50%) translateY(3px);
-      }
-      #pan-down:active {
-        transform: translateX(-50%) translateY(-1px) scale(0.92);
-      }
-
-      #pan-left {
-        top: 50%;
-        left: 18px;
-        transform: translateY(-50%);
-      }
-      #pan-left:hover {
-        transform: translateY(-50%) translateX(-3px);
-      }
-      #pan-left:active {
-        transform: translateY(-50%) translateX(1px) scale(0.92);
-      }
-
-      #pan-right {
-        top: 50%;
-        right: 18px;
-        transform: translateY(-50%);
-      }
-      #pan-right:hover {
-        transform: translateY(-50%) translateX(3px);
-      }
-      #pan-right:active {
-        transform: translateY(-50%) translateX(-1px) scale(0.92);
-      }
-    </style>
-  </head>
-  <body>
-    <div id="game-container">
-      <canvas id="game-canvas"></canvas>
-
-      <button id="pan-up" class="pan-arrow" type="button" aria-label="Move up">&uarr;</button>
-      <button id="pan-down" class="pan-arrow" type="button" aria-label="Move down">&darr;</button>
-      <button id="pan-left" class="pan-arrow" type="button" aria-label="Move left">&larr;</button>
-      <button id="pan-right" class="pan-arrow" type="button" aria-label="Move right">&rarr;</button>
-
-      <div id="hud">
-        <div class="stat">Buttons: <span id="hud-count">1</span></div>
-        <div class="stat">Clicks: <span id="hud-clicks">0</span></div>
-      </div>
-
-      <div id="modifier-flash"></div>
-
-      <div id="debug-panel">
-        <div>FPS: <span id="debug-fps">0</span></div>
-        <div>Entities: <span id="debug-entities">0</span></div>
+    <div id="top-navbar">
+      <div class="nav-shell">
+        <div class="brand">Button Crash</div>
+        <div class="stats">
+          <div class="stat-card">
+            <div class="stat-label">FPS</div>
+            <div class="stat-value accent" id="debug-fps">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Buttons</div>
+            <div class="stat-value" id="hud-count">1</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Clicks</div>
+            <div class="stat-value" id="hud-clicks">0</div>
+          </div>
+        </div>
       </div>
     </div>
 
-    <script type="module" src="/src/main.ts"></script>
-  </body>
+    <div id="modifier-flash"></div>
+
+    <div id="debug-panel">
+      <div>Entities: <span id="debug-entities">0</span></div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.ts"></script>
+</body>
+
 </html>

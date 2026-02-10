@@ -47,10 +47,6 @@ export class Game {
   private debugFps: HTMLElement | null;
   private debugEntities: HTMLElement | null;
   private modifierFlash: HTMLElement | null;
-  private panUpButton: HTMLButtonElement | null;
-  private panDownButton: HTMLButtonElement | null;
-  private panLeftButton: HTMLButtonElement | null;
-  private panRightButton: HTMLButtonElement | null;
 
   constructor(canvasId: string) {
     // ── Initialize core ───────────────────────
@@ -89,13 +85,8 @@ export class Game {
     this.debugFps = document.getElementById('debug-fps');
     this.debugEntities = document.getElementById('debug-entities');
     this.modifierFlash = document.getElementById('modifier-flash');
-    this.panUpButton = document.getElementById('pan-up') as HTMLButtonElement | null;
-    this.panDownButton = document.getElementById('pan-down') as HTMLButtonElement | null;
-    this.panLeftButton = document.getElementById('pan-left') as HTMLButtonElement | null;
-    this.panRightButton = document.getElementById('pan-right') as HTMLButtonElement | null;
 
     // ── Wire up events ────────────────────────
-    this.setupPanControls();
     this.setupEventHandlers();
 
     // ── Spawn the initial button at center ────
@@ -149,13 +140,6 @@ export class Game {
     }, 1200);
   }
 
-  private setupPanControls(): void {
-    this.panUpButton?.addEventListener('click', () => this.canvas.panByCells(0, -1, CELL_SIZE));
-    this.panDownButton?.addEventListener('click', () => this.canvas.panByCells(0, 1, CELL_SIZE));
-    this.panLeftButton?.addEventListener('click', () => this.canvas.panByCells(-1, 0, CELL_SIZE));
-    this.panRightButton?.addEventListener('click', () => this.canvas.panByCells(1, 0, CELL_SIZE));
-  }
-
   // ── Game loop callbacks ───────────────────────
 
   private update(dt: number): void {
@@ -179,9 +163,9 @@ export class Game {
   private updateHUD(): void {
     if (this.hudCount) this.hudCount.textContent = String(this.entities.count);
     if (this.hudClicks) this.hudClicks.textContent = String(this.spawnSystem.clickCount);
+    if (this.debugFps) this.debugFps.textContent = String(this.loop.fps);
 
     if (DEBUG_MODE) {
-      if (this.debugFps) this.debugFps.textContent = String(this.loop.fps);
       if (this.debugEntities) this.debugEntities.textContent = String(this.entities.count);
     }
   }
