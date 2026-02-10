@@ -22,6 +22,7 @@ export class SpawnSystem {
     private grid: Grid,
   ) {
     this.bus.on('input:click', this.handleClick);
+    this.bus.on('preview:click', this.handlePreviewClick);
   }
 
   private handleClick = (payload: { col: number; row: number; entityId: number | null }): void => {
@@ -59,6 +60,43 @@ export class SpawnSystem {
         x: cx,
         y: cy,
         color: entity.renderable?.style.fillColor ?? '#ffffff',
+        count: 8,
+      });
+    }
+  };
+
+  private handlePreviewClick = (payload: {
+    col: number;
+    row: number;
+    direction: Direction;
+    sourceEntityId: number;
+  }): void => {
+    const { col, row, direction, sourceEntityId } = payload;
+
+    if (!this.grid.isFree(col, row)) return;
+
+    const sourceEntity = this.entities.get(sourceEntityId);
+    if (!sourceEntity) return;
+
+    this.clickCount++;
+    const style = randomStyle();
+    this.spawnButton(col, row, style);
+
+    this.bus.emit('button:clicked', {
+      entityId: sourceEntityId,
+      col: sourceEntity.gridCell?.col ?? col,
+      row: sourceEntity.gridCell?.row ?? row,
+      direction,
+    });
+
+    // Particles at source button
+    if (sourceEntity.position) {
+      const cx = sourceEntity.position.x + this.grid.cellSize / 2;
+      const cy = sourceEntity.position.y + this.grid.cellSize / 2;
+      this.bus.emit('effect:particles', {
+        x: cx,
+        y: cy,
+        color: sourceEntity.renderable?.style.fillColor ?? '#ffffff',
         count: 8,
       });
     }

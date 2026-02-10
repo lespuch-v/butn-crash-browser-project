@@ -9,6 +9,7 @@ import { SpawnSystem } from '../systems/spawn-system';
 import { AnimationSystem } from '../systems/animation-system';
 import { MovementSystem } from '../systems/movement-system';
 import { LifetimeSystem } from '../systems/lifetime-system';
+import { SpawnPreviewState } from '../systems/spawn-preview';
 import { ModifierRegistry, MassSpawnModifier, StyleCopyModifier } from '../modifiers';
 import type { ModifierContext, Modifier } from '../modifiers';
 import { randomStyle } from '../models/button-style';
@@ -58,8 +59,11 @@ export class Game {
     this.entities = new EntityManager();
     this.grid = new Grid(CELL_SIZE);
 
+    // ── Shared state ─────────────────────────
+    const previewState = new SpawnPreviewState();
+
     // ── Initialize systems ────────────────────
-    this.inputSystem = new InputSystem(this.canvas, this.bus, this.entities, this.grid);
+    this.inputSystem = new InputSystem(this.canvas, this.bus, this.entities, this.grid, previewState);
     this.spawnSystem = new SpawnSystem(this.bus, this.entities, this.grid);
     this.animationSystem = new AnimationSystem(this.entities);
     this.movementSystem = new MovementSystem(this.entities);
@@ -71,7 +75,7 @@ export class Game {
     this.modifierRegistry.register(StyleCopyModifier);
 
     // ── Initialize renderer ───────────────────
-    this.renderer = new Renderer(this.canvas, this.entities, this.grid);
+    this.renderer = new Renderer(this.canvas, this.entities, this.grid, previewState);
 
     // ── Game loop ─────────────────────────────
     this.loop = new GameLoop(

@@ -1,8 +1,10 @@
 import type { CanvasManager } from '@core/canvas-manager';
 import type { EntityManager } from '@ecs/entity-manager';
 import type { Grid } from '@grid/grid';
+import type { SpawnPreviewState } from '@systems/spawn-preview';
 import { renderGrid } from './grid-renderer';
 import { renderButton } from './button-renderer';
+import { renderPreviews } from './preview-renderer';
 import { EffectsRenderer } from './effects-renderer';
 
 /**
@@ -15,6 +17,7 @@ export class Renderer {
     private canvas: CanvasManager,
     private entities: EntityManager,
     private grid: Grid,
+    private previewState: SpawnPreviewState,
   ) {
     this.effects = new EffectsRenderer();
   }
@@ -38,6 +41,9 @@ export class Renderer {
     for (const entity of buttons) {
       renderButton(ctx, entity, this.grid.cellSize);
     }
+
+    // Spawn preview "+" indicators
+    renderPreviews(ctx, this.previewState, this.grid);
 
     // Particle effects on top
     this.effects.render(ctx);

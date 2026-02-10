@@ -16,6 +16,9 @@ export interface GameEvents {
   'modifier:triggered': { name: string; entityId: number };
   'modifier:complete': { name: string };
 
+  // Preview events
+  'preview:click': { col: number; row: number; direction: Direction; sourceEntityId: number };
+
   // Effect events
   'effect:spawn_anim': { entityId: number; col: number; row: number };
   'effect:explosion': { col: number; row: number; radius: number };
