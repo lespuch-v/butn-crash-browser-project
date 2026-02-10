@@ -97,6 +97,10 @@
       border-radius: 11px;
       border: 1px solid rgba(186, 230, 253, 0.14);
       background: linear-gradient(145deg, rgba(30, 41, 59, 0.46), rgba(15, 23, 42, 0.27));
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
     }
 
     #top-navbar .stat-label {
@@ -104,7 +108,8 @@
       font-size: 10px;
       letter-spacing: 0.08em;
       text-transform: uppercase;
-      margin-bottom: 2px;
+      margin-bottom: 0;
+      white-space: nowrap;
     }
 
     #top-navbar .stat-value {
@@ -112,6 +117,7 @@
       font-size: 18px;
       font-weight: 700;
       line-height: 1.1;
+      white-space: nowrap;
     }
 
     #top-navbar .stat-value.accent {
