@@ -12,7 +12,7 @@ import { LifetimeSystem } from '../systems/lifetime-system';
 import { SpawnPreviewState } from '../systems/spawn-preview';
 import { ModifierRegistry, MassSpawnModifier, StyleCopyModifier } from '../modifiers';
 import type { ModifierContext, Modifier } from '../modifiers';
-import { randomStyle } from '../models/button-style';
+import { retroInitialStyle } from '../models/button-style';
 import { CELL_SIZE, MODIFIER_CHANCE, DEBUG_MODE } from '../constants';
 
 /**
@@ -137,7 +137,7 @@ export class Game {
     const centerWorldX = this.canvas.cameraX + this.canvas.width / 2;
     const centerWorldY = this.canvas.cameraY + this.canvas.height / 2;
     const { col: centerCol, row: centerRow } = this.grid.pixelToCell(centerWorldX, centerWorldY);
-    this.spawnSystem.spawnButton(centerCol, centerRow, randomStyle());
+    this.spawnSystem.spawnButton(centerCol, centerRow, retroInitialStyle());
   }
 
   private showModifierFlash(modifier: Modifier): void {

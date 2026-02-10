@@ -243,6 +243,28 @@ export function randomStyle(): ButtonStyle {
   return generateChaosStyle();
 }
 
+export function retroInitialStyle(): ButtonStyle {
+  return {
+    fillColor: '#c0c0c0',
+    borderColor: '#4a4a4a',
+    borderWidth: 2,
+    borderRadius: 2,
+    shadowBlur: 0,
+    shadowColor: 'rgba(0, 0, 0, 0)',
+    icon: 'OK',
+    hoverFillColor: '#d8d8d8',
+    shape: 'rect',
+    width: 116,
+    height: 56,
+    content: {
+      text: 'Don"t touch!',
+      fontSize: 0.35,
+      fontFamily: 'serif',
+      color: '#111111',
+      rotation: 0,
+    },
+  };
+}
 // ── Default styles (updated with new fields) ─────────
 
 export const DEFAULT_STYLES: ButtonStyle[] = [
