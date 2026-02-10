@@ -26,17 +26,22 @@ export class Renderer {
     // 1. Clear & background
     this.canvas.fill('#0a0a0f');
 
-    // 2. Grid lines
+    // 2. Draw world-space layers with camera transform.
+    ctx.save();
+    ctx.translate(-this.canvas.cameraX, -this.canvas.cameraY);
+
+    // Grid lines
     renderGrid(this.canvas, this.grid.cellSize);
 
-    // 3. All button entities
+    // All button entities
     const buttons = this.entities.query('position', 'renderable');
     for (const entity of buttons) {
       renderButton(ctx, entity, this.grid.cellSize);
     }
 
-    // 4. Particle effects on top
+    // Particle effects on top
     this.effects.render(ctx);
+    ctx.restore();
   }
 
   /** Update effects (particles, etc.) */

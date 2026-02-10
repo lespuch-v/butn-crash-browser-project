@@ -11,6 +11,8 @@ export class CanvasManager {
 
   /** Device pixel ratio for crisp rendering */
   public dpr: number = 1;
+  public cameraX: number = 0;
+  public cameraY: number = 0;
 
   constructor(canvasId: string) {
     this.canvas = document.getElementById(canvasId) as HTMLCanvasElement;
@@ -55,6 +57,25 @@ export class CanvasManager {
   /** How many grid rows fit on screen */
   gridRows(cellSize: number): number {
     return Math.ceil(this.height / cellSize);
+  }
+
+  /** Pan camera in world-space pixels */
+  panBy(dx: number, dy: number): void {
+    this.cameraX += dx;
+    this.cameraY += dy;
+  }
+
+  /** Pan camera by full grid cells */
+  panByCells(colDelta: number, rowDelta: number, cellSize: number): void {
+    this.panBy(colDelta * cellSize, rowDelta * cellSize);
+  }
+
+  /** Convert screen-space pixel to world-space pixel */
+  screenToWorld(x: number, y: number): { x: number; y: number } {
+    return {
+      x: x + this.cameraX,
+      y: y + this.cameraY,
+    };
   }
 
   destroy(): void {

@@ -6,23 +6,27 @@ import { GRID_LINE_COLOR, GRID_LINE_WIDTH } from '../constants';
  */
 export function renderGrid(canvas: CanvasManager, cellSize: number): void {
   const { ctx, width, height } = canvas;
+  const worldStartX = Math.floor(canvas.cameraX / cellSize) * cellSize;
+  const worldEndX = canvas.cameraX + width;
+  const worldStartY = Math.floor(canvas.cameraY / cellSize) * cellSize;
+  const worldEndY = canvas.cameraY + height;
 
   ctx.strokeStyle = GRID_LINE_COLOR;
   ctx.lineWidth = GRID_LINE_WIDTH;
 
   // Vertical lines
-  for (let x = 0; x <= width; x += cellSize) {
+  for (let x = worldStartX; x <= worldEndX; x += cellSize) {
     ctx.beginPath();
-    ctx.moveTo(x, 0);
-    ctx.lineTo(x, height);
+    ctx.moveTo(x, worldStartY);
+    ctx.lineTo(x, worldEndY);
     ctx.stroke();
   }
 
   // Horizontal lines
-  for (let y = 0; y <= height; y += cellSize) {
+  for (let y = worldStartY; y <= worldEndY; y += cellSize) {
     ctx.beginPath();
-    ctx.moveTo(0, y);
-    ctx.lineTo(width, y);
+    ctx.moveTo(worldStartX, y);
+    ctx.lineTo(worldEndX, y);
     ctx.stroke();
   }
 }

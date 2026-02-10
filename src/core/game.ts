@@ -46,6 +46,10 @@ export class Game {
   private debugFps: HTMLElement | null;
   private debugEntities: HTMLElement | null;
   private modifierFlash: HTMLElement | null;
+  private panUpButton: HTMLButtonElement | null;
+  private panDownButton: HTMLButtonElement | null;
+  private panLeftButton: HTMLButtonElement | null;
+  private panRightButton: HTMLButtonElement | null;
 
   constructor(canvasId: string) {
     // ── Initialize core ───────────────────────
@@ -81,8 +85,13 @@ export class Game {
     this.debugFps = document.getElementById('debug-fps');
     this.debugEntities = document.getElementById('debug-entities');
     this.modifierFlash = document.getElementById('modifier-flash');
+    this.panUpButton = document.getElementById('pan-up') as HTMLButtonElement | null;
+    this.panDownButton = document.getElementById('pan-down') as HTMLButtonElement | null;
+    this.panLeftButton = document.getElementById('pan-left') as HTMLButtonElement | null;
+    this.panRightButton = document.getElementById('pan-right') as HTMLButtonElement | null;
 
     // ── Wire up events ────────────────────────
+    this.setupPanControls();
     this.setupEventHandlers();
 
     // ── Spawn the initial button at center ────
@@ -121,8 +130,9 @@ export class Game {
   }
 
   private spawnInitialButton(): void {
-    const centerCol = Math.floor(this.canvas.gridCols(CELL_SIZE) / 2);
-    const centerRow = Math.floor(this.canvas.gridRows(CELL_SIZE) / 2);
+    const centerWorldX = this.canvas.cameraX + this.canvas.width / 2;
+    const centerWorldY = this.canvas.cameraY + this.canvas.height / 2;
+    const { col: centerCol, row: centerRow } = this.grid.pixelToCell(centerWorldX, centerWorldY);
     this.spawnSystem.spawnButton(centerCol, centerRow, randomStyle());
   }
 
@@ -133,6 +143,13 @@ export class Game {
     setTimeout(() => {
       this.modifierFlash?.classList.remove('visible');
     }, 1200);
+  }
+
+  private setupPanControls(): void {
+    this.panUpButton?.addEventListener('click', () => this.canvas.panByCells(0, -1, CELL_SIZE));
+    this.panDownButton?.addEventListener('click', () => this.canvas.panByCells(0, 1, CELL_SIZE));
+    this.panLeftButton?.addEventListener('click', () => this.canvas.panByCells(-1, 0, CELL_SIZE));
+    this.panRightButton?.addEventListener('click', () => this.canvas.panByCells(1, 0, CELL_SIZE));
   }
 
   // ── Game loop callbacks ───────────────────────

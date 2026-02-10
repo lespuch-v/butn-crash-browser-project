@@ -10,6 +10,11 @@ import type { Grid } from '@grid/grid';
 export class InputSystem {
   private lastHoveredEntity: number | null = null;
 
+  // Right-click pan state
+  private isPanning: boolean = false;
+  private panLastX: number = 0;
+  private panLastY: number = 0;
+
   constructor(
     private canvas: CanvasManager,
     private bus: EventBus,
@@ -19,6 +24,9 @@ export class InputSystem {
     this.canvas.canvas.addEventListener('click', this.handleClick);
     this.canvas.canvas.addEventListener('mousemove', this.handleMouseMove);
     this.canvas.canvas.addEventListener('mouseleave', this.handleMouseLeave);
+    this.canvas.canvas.addEventListener('mousedown', this.handleMouseDown);
+    this.canvas.canvas.addEventListener('contextmenu', this.handleContextMenu);
+    window.addEventListener('mouseup', this.handleMouseUp);
   }
 
   private handleClick = (e: MouseEvent): void => {
@@ -28,7 +36,35 @@ export class InputSystem {
     this.bus.emit('input:click', { col, row, entityId });
   };
 
+  private handleMouseDown = (e: MouseEvent): void => {
+    if (e.button === 2) {
+      this.isPanning = true;
+      this.panLastX = e.clientX;
+      this.panLastY = e.clientY;
+    }
+  };
+
+  private handleMouseUp = (e: MouseEvent): void => {
+    if (e.button === 2) {
+      this.isPanning = false;
+    }
+  };
+
+  private handleContextMenu = (e: Event): void => {
+    e.preventDefault();
+  };
+
   private handleMouseMove = (e: MouseEvent): void => {
+    // Handle panning
+    if (this.isPanning) {
+      const dx = e.clientX - this.panLastX;
+      const dy = e.clientY - this.panLastY;
+      this.panLastX = e.clientX;
+      this.panLastY = e.clientY;
+      this.canvas.panBy(-dx, -dy);
+      return;
+    }
+
     const { col, row } = this.getGridCoords(e);
     const entityId = this.grid.get(col, row);
 
@@ -65,19 +101,27 @@ export class InputSystem {
 
   private getGridCoords(e: MouseEvent): { col: number; row: number } {
     const rect = this.canvas.canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    return this.grid.pixelToCell(x, y);
+    const screenX = e.clientX - rect.left;
+    const screenY = e.clientY - rect.top;
+    const world = this.canvas.screenToWorld(screenX, screenY);
+    return this.grid.pixelToCell(world.x, world.y);
   }
 
-  /** Update cursor style based on hover state */
+  /** Update cursor style based on hover/pan state */
   update(): void {
-    this.canvas.canvas.style.cursor = this.lastHoveredEntity !== null ? 'pointer' : 'default';
+    if (this.isPanning) {
+      this.canvas.canvas.style.cursor = 'grabbing';
+    } else {
+      this.canvas.canvas.style.cursor = this.lastHoveredEntity !== null ? 'pointer' : 'default';
+    }
   }
 
   destroy(): void {
     this.canvas.canvas.removeEventListener('click', this.handleClick);
     this.canvas.canvas.removeEventListener('mousemove', this.handleMouseMove);
     this.canvas.canvas.removeEventListener('mouseleave', this.handleMouseLeave);
+    this.canvas.canvas.removeEventListener('mousedown', this.handleMouseDown);
+    this.canvas.canvas.removeEventListener('contextmenu', this.handleContextMenu);
+    window.removeEventListener('mouseup', this.handleMouseUp);
   }
 }
