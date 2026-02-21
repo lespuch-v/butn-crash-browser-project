@@ -11,9 +11,12 @@ Button Chaos — a chain-reaction button spawning game built with vanilla TypeSc
 ```bash
 npm run dev        # Vite dev server (port 3000, auto-open)
 npm run build      # tsc + vite build → dist/
-npm run test       # Vitest
+npm run test       # Vitest (all tests in tests/)
 npm run lint       # ESLint on src/**/*.ts
 npm run format     # Prettier on src/**/*.ts
+
+# Run a single test file
+npm run test -- tests/event-bus.test.ts
 ```
 
 ## Path Aliases
@@ -21,7 +24,7 @@ npm run format     # Prettier on src/**/*.ts
 Defined in both `tsconfig.json` and `vite.config.ts`. Always use these for imports:
 
 ```
-@core/*  @ecs/*  @systems/*  @grid/*  @modifiers/*  @rendering/*  @models/*  @utils/*
+@core/*  @ecs/*  @systems/*  @grid/*  @modifiers/*  @rendering/*  @effects/*  @models/*  @utils/*
 ```
 
 Each subdirectory has an `index.ts` barrel file, so `import { EventBus } from '@core'` works.
@@ -40,9 +43,11 @@ Each subdirectory has an `index.ts` barrel file, so `import { EventBus } from '@
 
 **Modifier System** — Modifiers implement `{ name, icon, weight, execute(ctx) }`. Registered in `ModifierRegistry`, triggered randomly on click (25% chance). To add a new modifier: create file in `src/modifiers/`, implement the interface, register in `Game` constructor.
 
+**Sound System** — Event-driven Web Audio synthesis (`@systems/sound-system.ts`). Listens to `button:clicked` and `modifier:triggered` events. Generates tones procedurally via oscillators (sine, triangle, sawtooth, square) with frequency sweeps and attack/release envelopes. Supports per-modifier sound overrides and sample playback via HTMLAudioElement pooling. Sound definitions live in `@models/sound.ts`. Runtime config exposed through `window.__game` (`setSoundEnabled`, `setMasterVolume`, `configureSounds`, `registerModifierSound`).
+
 ## Update Order
 
-In `Game.update(dt)`: InputSystem → AnimationSystem → MovementSystem → LifetimeSystem → EffectsRenderer → EntityManager.flush() → HUD update.
+In `Game.update(dt)`: InputSystem → AnimationSystem → MovementSystem → LifetimeSystem → EffectsRenderer → EntityManager.flush() → HUD update. SoundSystem is event-driven (not in the update loop).
 
 ## Key Constants (`src/constants.ts`)
 

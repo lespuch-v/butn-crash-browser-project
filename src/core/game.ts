@@ -9,9 +9,11 @@ import { SpawnSystem } from '../systems/spawn-system';
 import { AnimationSystem } from '../systems/animation-system';
 import { MovementSystem } from '../systems/movement-system';
 import { LifetimeSystem } from '../systems/lifetime-system';
+import { SoundSystem } from '../systems/sound-system';
 import { SpawnPreviewState } from '../systems/spawn-preview';
 import { ModifierRegistry, MassSpawnModifier, StyleCopyModifier } from '../modifiers';
 import type { ModifierContext, Modifier } from '../modifiers';
+import type { SoundConfig, SoundDefinition } from '@models/sound';
 import {
   DEFAULT_MODIFIER_SHADER,
   MODIFIER_SHADER_CLASSES,
@@ -40,6 +42,7 @@ export class Game {
   private animationSystem: AnimationSystem;
   private movementSystem: MovementSystem;
   private lifetimeSystem: LifetimeSystem;
+  private soundSystem: SoundSystem;
 
   // Modifiers
   private modifierRegistry: ModifierRegistry;
@@ -52,8 +55,10 @@ export class Game {
   private hudClicks: HTMLElement | null;
   private debugFps: HTMLElement | null;
   private debugEntities: HTMLElement | null;
+  private hudSoundToggle: HTMLButtonElement | null;
   private modifierFlash: HTMLElement | null;
   private modifierFlashTimeout: ReturnType<typeof setTimeout> | null;
+  private soundEnabled: boolean;
 
   constructor(canvasId: string) {
     // ── Initialize core ───────────────────────
@@ -71,6 +76,9 @@ export class Game {
     this.animationSystem = new AnimationSystem(this.entities);
     this.movementSystem = new MovementSystem(this.entities);
     this.lifetimeSystem = new LifetimeSystem(this.bus, this.entities, this.grid);
+    this.soundSystem = new SoundSystem(this.bus);
+    this.soundEnabled = false;
+    this.soundSystem.setEnabled(this.soundEnabled);
 
     // ── Initialize modifiers ──────────────────
     this.modifierRegistry = new ModifierRegistry();
@@ -91,8 +99,11 @@ export class Game {
     this.hudClicks = document.getElementById('hud-clicks');
     this.debugFps = document.getElementById('debug-fps');
     this.debugEntities = document.getElementById('debug-entities');
+    this.hudSoundToggle = document.getElementById('sound-toggle') as HTMLButtonElement | null;
     this.modifierFlash = document.getElementById('modifier-flash');
     this.modifierFlashTimeout = null;
+
+    this.setupSoundToggle();
 
     // ── Wire up events ────────────────────────
     this.setupEventHandlers();
@@ -137,6 +148,24 @@ export class Game {
     const centerWorldY = this.canvas.cameraY + this.canvas.height / 2;
     const { col: centerCol, row: centerRow } = this.grid.pixelToCell(centerWorldX, centerWorldY);
     this.spawnSystem.spawnButton(centerCol, centerRow, retroInitialStyle());
+  }
+
+  private setupSoundToggle(): void {
+    if (!this.hudSoundToggle) return;
+    this.hudSoundToggle.addEventListener('click', this.handleSoundToggleClick);
+    this.updateSoundToggleUI();
+  }
+
+  private handleSoundToggleClick = (): void => {
+    this.setSoundEnabled(!this.soundEnabled);
+  };
+
+  private updateSoundToggleUI(): void {
+    if (!this.hudSoundToggle) return;
+
+    this.hudSoundToggle.textContent = this.soundEnabled ? '🔊' : '🔇';
+    this.hudSoundToggle.setAttribute('aria-pressed', String(this.soundEnabled));
+    this.hudSoundToggle.classList.toggle('is-on', this.soundEnabled);
   }
 
   private showModifierFlash(modifier: Modifier): void {
@@ -205,6 +234,32 @@ export class Game {
 
   stop(): void {
     this.loop.stop();
+  }
+
+  setSoundEnabled(enabled: boolean): void {
+    this.soundEnabled = enabled;
+    this.soundSystem.setEnabled(enabled);
+    this.updateSoundToggleUI();
+  }
+
+  setMasterVolume(volume: number): void {
+    this.soundSystem.setMasterVolume(volume);
+  }
+
+  configureSounds(config: Partial<SoundConfig>): void {
+    this.soundSystem.configure(config);
+    if (typeof config.enabled === 'boolean') {
+      this.soundEnabled = config.enabled;
+      this.updateSoundToggleUI();
+    }
+  }
+
+  registerModifierSound(modifierName: string, sound: SoundDefinition): void {
+    this.soundSystem.registerModifierSound(modifierName, sound);
+  }
+
+  getSoundConfig(): SoundConfig {
+    return this.soundSystem.getConfig();
   }
 
   reset(): void {

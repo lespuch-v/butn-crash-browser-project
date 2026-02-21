@@ -45,3 +45,34 @@ src/
 - `npm run dev` — Start dev server with HMR
 - `npm run build` — Production build
 - `npm run test` — Run tests
+
+## Sound System
+
+The game now has an event-driven sound system powered by Web Audio synthesis.
+
+- Plays click SFX on `button:clicked`
+- Plays modifier SFX on `modifier:triggered`
+- Uses per-modifier sound overrides with a default fallback
+
+Runtime API (available through `window.__game`):
+
+```ts
+// Toggle audio
+window.__game.setSoundEnabled(false);
+
+// Master volume (0..1)
+window.__game.setMasterVolume(0.35);
+
+// Update multiple settings
+window.__game.configureSounds({
+  enabled: true,
+  masterVolume: 0.6,
+});
+
+// Override one modifier sound
+window.__game.registerModifierSound('Mass Spawn', {
+  tones: [
+    { waveform: 'sawtooth', frequency: 280, frequencyEnd: 940, durationMs: 180, volume: 0.22 },
+  ],
+});
+```
