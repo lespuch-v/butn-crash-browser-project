@@ -31,7 +31,10 @@ export class Renderer {
 
     // 2. Draw world-space layers with camera transform.
     ctx.save();
-    ctx.translate(-this.canvas.cameraX, -this.canvas.cameraY);
+    ctx.translate(
+      -this.canvas.cameraX + this.canvas.shakeOffsetX,
+      -this.canvas.cameraY + this.canvas.shakeOffsetY,
+    );
 
     // Grid lines
     renderGrid(this.canvas, this.grid.cellSize);

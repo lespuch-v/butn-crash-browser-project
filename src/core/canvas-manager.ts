@@ -14,6 +14,10 @@ export class CanvasManager {
   public cameraX: number = 0;
   public cameraY: number = 0;
 
+  /** Written each frame by CameraShake. Applied on top of camera position. */
+  public shakeOffsetX: number = 0;
+  public shakeOffsetY: number = 0;
+
   constructor(canvasId: string) {
     this.canvas = document.getElementById(canvasId) as HTMLCanvasElement;
     if (!this.canvas) throw new Error(`Canvas #${canvasId} not found`);

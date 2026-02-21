@@ -1,6 +1,7 @@
 import { EventBus } from './event-bus';
 import { GameLoop } from './game-loop';
 import { CanvasManager } from './canvas-manager';
+import { CameraShake } from './camera-shake';
 import { EntityManager } from '../ecs/entity-manager';
 import { Grid } from '../grid/grid';
 import { Renderer } from '../rendering/renderer';
@@ -49,6 +50,7 @@ export class Game {
 
   // Rendering
   private renderer: Renderer;
+  private cameraShake: CameraShake;
 
   // HUD elements
   private hudCount: HTMLElement | null;
@@ -87,6 +89,7 @@ export class Game {
 
     // ── Initialize renderer ───────────────────
     this.renderer = new Renderer(this.canvas, this.entities, this.grid, previewState);
+    this.cameraShake = new CameraShake();
 
     // ── Game loop ─────────────────────────────
     this.loop = new GameLoop(
@@ -134,6 +137,7 @@ export class Game {
       if (triggered) {
         this.showModifierFlash(triggered);
         this.bus.emit('modifier:triggered', { name: triggered.name, entityId: entity.id });
+        this.cameraShake.trigger();
       }
     });
 
@@ -199,6 +203,10 @@ export class Game {
     this.movementSystem.update(dt);
     this.lifetimeSystem.update(dt);
     this.renderer.updateEffects(dt);
+
+    this.cameraShake.update(dt);
+    this.canvas.shakeOffsetX = this.cameraShake.offsetX;
+    this.canvas.shakeOffsetY = this.cameraShake.offsetY;
 
     // Flush destroyed entities
     this.entities.flush();
