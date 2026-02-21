@@ -7,6 +7,7 @@ import { ALL_DIRECTIONS, DIRECTION_VECTORS } from '@models/direction';
 export const MassSpawnModifier: Modifier = {
   name: 'Mass Spawn!',
   icon: '💥',
+  shader: 'energy-core-pulse',
   weight: 3,
 
   execute(ctx: ModifierContext): void {

@@ -12,6 +12,12 @@ import { LifetimeSystem } from '../systems/lifetime-system';
 import { SpawnPreviewState } from '../systems/spawn-preview';
 import { ModifierRegistry, MassSpawnModifier, StyleCopyModifier } from '../modifiers';
 import type { ModifierContext, Modifier } from '../modifiers';
+import {
+  DEFAULT_MODIFIER_SHADER,
+  MODIFIER_SHADER_CLASSES,
+  shaderFromModifierName,
+  toModifierShaderClass,
+} from '@models/modifier-shader';
 import { retroInitialStyle } from '../models/button-style';
 import { CELL_SIZE, MODIFIER_CHANCE, DEBUG_MODE } from '../constants';
 
@@ -47,6 +53,7 @@ export class Game {
   private debugFps: HTMLElement | null;
   private debugEntities: HTMLElement | null;
   private modifierFlash: HTMLElement | null;
+  private modifierFlashTimeout: ReturnType<typeof setTimeout> | null;
 
   constructor(canvasId: string) {
     // ── Initialize core ───────────────────────
@@ -85,6 +92,7 @@ export class Game {
     this.debugFps = document.getElementById('debug-fps');
     this.debugEntities = document.getElementById('debug-entities');
     this.modifierFlash = document.getElementById('modifier-flash');
+    this.modifierFlashTimeout = null;
 
     // ── Wire up events ────────────────────────
     this.setupEventHandlers();
@@ -134,10 +142,24 @@ export class Game {
   private showModifierFlash(modifier: Modifier): void {
     if (!this.modifierFlash) return;
     this.modifierFlash.textContent = `${modifier.icon} ${modifier.name}`;
+
+    const shader = modifier.shader ?? shaderFromModifierName(modifier.name) ?? DEFAULT_MODIFIER_SHADER;
+    this.modifierFlash.classList.remove(...MODIFIER_SHADER_CLASSES);
+    this.modifierFlash.classList.add(toModifierShaderClass(shader));
+
+    // Restart animation on consecutive triggers.
+    this.modifierFlash.classList.remove('visible');
+    void this.modifierFlash.offsetWidth;
     this.modifierFlash.classList.add('visible');
-    setTimeout(() => {
+
+    if (this.modifierFlashTimeout) {
+      clearTimeout(this.modifierFlashTimeout);
+    }
+
+    this.modifierFlashTimeout = setTimeout(() => {
       this.modifierFlash?.classList.remove('visible');
-    }, 1200);
+      this.modifierFlashTimeout = null;
+    }, 1800);
   }
 
   // ── Game loop callbacks ───────────────────────

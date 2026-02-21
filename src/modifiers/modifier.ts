@@ -5,6 +5,7 @@ import type { Grid } from '@grid/grid';
 import type { SpawnSystem } from '@systems/spawn-system';
 import type { EffectsRenderer } from '@rendering/effects-renderer';
 import type { Direction } from '@models/direction';
+import type { ModifierShaderPreset } from '@models/modifier-shader';
 
 /** Context passed to every modifier when it executes */
 export interface ModifierContext {
@@ -29,6 +30,8 @@ export interface Modifier {
   name: string;
   /** Emoji icon for UI */
   icon: string;
+  /** Optional shader preset for the modifier flash notification */
+  shader?: ModifierShaderPreset;
   /** Weight for random selection (higher = more likely) */
   weight: number;
   /** Execute the modifier's effect */

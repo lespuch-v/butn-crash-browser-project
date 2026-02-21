@@ -3,3 +3,4 @@ export * from './button-style';
 export * from './species';
 export * from './events';
 export * from './game-config';
+export * from './modifier-shader';
