@@ -8,11 +8,12 @@ import { Renderer } from '../rendering/renderer';
 import { InputSystem } from '../systems/input-system';
 import { SpawnSystem } from '../systems/spawn-system';
 import { AnimationSystem } from '../systems/animation-system';
+import { EvasionSystem } from '../systems/evasion-system';
 import { MovementSystem } from '../systems/movement-system';
 import { LifetimeSystem } from '../systems/lifetime-system';
 import { SoundSystem } from '../systems/sound-system';
 import { SpawnPreviewState } from '../systems/spawn-preview';
-import { ModifierRegistry, LoveBurstModifier, MassSpawnModifier, StyleCopyModifier, TetrominoSpawnModifier } from '../modifiers';
+import { EvasionModifier, ModifierRegistry, LoveBurstModifier, MassSpawnModifier, StyleCopyModifier, TetrominoSpawnModifier } from '../modifiers';
 import type { ModifierContext, Modifier } from '../modifiers';
 import { Direction } from '@models/direction';
 import type { SoundConfig, SoundDefinition } from '@models/sound';
@@ -42,6 +43,7 @@ export class Game {
   private inputSystem: InputSystem;
   private spawnSystem: SpawnSystem;
   private animationSystem: AnimationSystem;
+  private evasionSystem: EvasionSystem;
   private movementSystem: MovementSystem;
   private lifetimeSystem: LifetimeSystem;
   private soundSystem: SoundSystem;
@@ -83,6 +85,7 @@ export class Game {
     this.inputSystem = new InputSystem(this.canvas, this.bus, this.entities, this.grid, previewState);
     this.spawnSystem = new SpawnSystem(this.bus, this.entities, this.grid);
     this.animationSystem = new AnimationSystem(this.entities);
+    this.evasionSystem = new EvasionSystem(this.bus, this.entities, this.grid);
     this.movementSystem = new MovementSystem(this.entities);
     this.lifetimeSystem = new LifetimeSystem(this.bus, this.entities, this.grid);
     this.soundSystem = new SoundSystem(this.bus);
@@ -91,6 +94,7 @@ export class Game {
 
     // ── Initialize modifiers ──────────────────
     this.modifierRegistry = new ModifierRegistry();
+    this.modifierRegistry.register(EvasionModifier);
     this.modifierRegistry.register(MassSpawnModifier);
     this.modifierRegistry.register(LoveBurstModifier);
     this.modifierRegistry.register(StyleCopyModifier);
@@ -288,6 +292,7 @@ export class Game {
   private update(dt: number): void {
     this.inputSystem.update();
     this.animationSystem.update(dt);
+    this.evasionSystem.update(dt);
     this.movementSystem.update(dt);
     this.lifetimeSystem.update(dt);
     this.renderer.updateEffects(dt);

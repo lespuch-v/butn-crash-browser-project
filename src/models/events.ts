@@ -15,6 +15,7 @@ export interface GameEvents {
   // Modifier events
   'modifier:triggered': { name: string; entityId: number };
   'modifier:complete': { name: string };
+  'modifier:evasion:start': { durationMs: number; radius: number };
 
   // Preview events
   'preview:click': { col: number; row: number; direction: Direction; sourceEntityId: number };

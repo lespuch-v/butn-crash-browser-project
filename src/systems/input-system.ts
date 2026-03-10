@@ -83,7 +83,9 @@ export class InputSystem {
     }
 
     const { col, row } = this.getGridCoords(e);
-    const entityId = this.grid.get(col, row);
+    const rawEntityId = this.grid.get(col, row);
+    const hoveredEntity = rawEntityId !== null ? this.entities.get(rawEntityId) : undefined;
+    const entityId = hoveredEntity?.interactive?.clickable ? rawEntityId : null;
 
     // Check if hovering a preview cell
     const previewHit = this.previewState.getAt(col, row);
