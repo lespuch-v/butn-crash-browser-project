@@ -1,5 +1,6 @@
 import { CELL_SIZE } from '../constants';
 import { ALL_DIRECTIONS, Direction, DIRECTION_VECTORS } from '@models/direction';
+import type { GridCellOffset } from '@ecs/components/grid-cell';
 
 /**
  * Logical grid backed by a Map for O(1) lookups.
@@ -45,6 +46,20 @@ export class Grid {
   /** Check if a cell is free */
   isFree(col: number, row: number): boolean {
     return !this.isOccupied(col, row);
+  }
+
+  private rectCells(colSpan: number, rowSpan: number): GridCellOffset[] {
+    const cells: GridCellOffset[] = [];
+    for (let dc = 0; dc < colSpan; dc++) {
+      for (let dr = 0; dr < rowSpan; dr++) {
+        cells.push({ col: dc, row: dr });
+      }
+    }
+    return cells;
+  }
+
+  occupiedCellsFor(colSpan: number, rowSpan: number, occupiedCells?: GridCellOffset[]): GridCellOffset[] {
+    return occupiedCells ?? this.rectCells(colSpan, rowSpan);
   }
 
   // ── Coordinate conversion ────────────────────
@@ -121,28 +136,56 @@ export class Grid {
 
   /** Place an entity across multiple cells. Anchor is top-left. */
   setSpan(col: number, row: number, colSpan: number, rowSpan: number, entityId: number): void {
-    for (let dc = 0; dc < colSpan; dc++) {
-      for (let dr = 0; dr < rowSpan; dr++) {
-        this.cells.set(this.key(col + dc, row + dr), entityId);
-      }
+    this.setShape(col, row, colSpan, rowSpan, entityId);
+  }
+
+  /** Place an entity across an arbitrary shape inside its bounding box. */
+  setShape(
+    col: number,
+    row: number,
+    colSpan: number,
+    rowSpan: number,
+    entityId: number,
+    occupiedCells?: GridCellOffset[],
+  ): void {
+    for (const cell of this.occupiedCellsFor(colSpan, rowSpan, occupiedCells)) {
+      this.cells.set(this.key(col + cell.col, row + cell.row), entityId);
     }
   }
 
   /** Remove an entity from all its spanned cells */
   removeSpan(col: number, row: number, colSpan: number, rowSpan: number): void {
-    for (let dc = 0; dc < colSpan; dc++) {
-      for (let dr = 0; dr < rowSpan; dr++) {
-        this.cells.delete(this.key(col + dc, row + dr));
-      }
+    this.removeShape(col, row, colSpan, rowSpan);
+  }
+
+  /** Remove an entity from all occupied cells in an arbitrary shape. */
+  removeShape(
+    col: number,
+    row: number,
+    colSpan: number,
+    rowSpan: number,
+    occupiedCells?: GridCellOffset[],
+  ): void {
+    for (const cell of this.occupiedCellsFor(colSpan, rowSpan, occupiedCells)) {
+      this.cells.delete(this.key(col + cell.col, row + cell.row));
     }
   }
 
   /** Check if all cells in a span are free */
   isSpanFree(col: number, row: number, colSpan: number, rowSpan: number): boolean {
-    for (let dc = 0; dc < colSpan; dc++) {
-      for (let dr = 0; dr < rowSpan; dr++) {
-        if (this.isOccupied(col + dc, row + dr)) return false;
-      }
+    return this.isShapeFree(col, row, colSpan, rowSpan);
+  }
+
+  /** Check if all cells in an arbitrary shape are free. */
+  isShapeFree(
+    col: number,
+    row: number,
+    colSpan: number,
+    rowSpan: number,
+    occupiedCells?: GridCellOffset[],
+  ): boolean {
+    for (const cell of this.occupiedCellsFor(colSpan, rowSpan, occupiedCells)) {
+      if (this.isOccupied(col + cell.col, row + cell.row)) return false;
     }
     return true;
   }
@@ -164,12 +207,25 @@ export class Grid {
     rowSpan: number,
     maxSteps: number = 50,
   ): { col: number; row: number } | null {
+    return this.findFreeShapeInDirection(startCol, startRow, direction, colSpan, rowSpan, undefined, maxSteps);
+  }
+
+  /** Find first free arbitrary shape walking in a direction. */
+  findFreeShapeInDirection(
+    startCol: number,
+    startRow: number,
+    direction: Direction,
+    colSpan: number,
+    rowSpan: number,
+    occupiedCells?: GridCellOffset[],
+    maxSteps: number = 50,
+  ): { col: number; row: number } | null {
     const vec = DIRECTION_VECTORS[direction];
     let col = startCol + vec.x;
     let row = startRow + vec.y;
 
     for (let i = 0; i < maxSteps; i++) {
-      if (this.isSpanFree(col, row, colSpan, rowSpan)) {
+      if (this.isShapeFree(col, row, colSpan, rowSpan, occupiedCells)) {
         return { col, row };
       }
       col += vec.x;
@@ -185,45 +241,47 @@ export class Grid {
     colSpan: number,
     rowSpan: number,
   ): { col: number; row: number; direction: Direction }[] {
+    return this.freeNeighborsAroundShape(col, row, colSpan, rowSpan);
+  }
+
+  /** Get one free neighboring cell per direction around an arbitrary shape. */
+  freeNeighborsAroundShape(
+    col: number,
+    row: number,
+    colSpan: number,
+    rowSpan: number,
+    occupiedCells?: GridCellOffset[],
+  ): { col: number; row: number; direction: Direction }[] {
     const result: { col: number; row: number; direction: Direction }[] = [];
+    const occupied = this.occupiedCellsFor(colSpan, rowSpan, occupiedCells);
+    const occupiedSet = new Set(occupied.map((cell) => this.key(cell.col, cell.row)));
 
-    // Top edge: row - 1, across all columns of the span
-    for (let dc = 0; dc < colSpan; dc++) {
-      const c = col + dc;
-      const r = row - 1;
-      if (this.isFree(c, r)) {
-        result.push({ col: c, row: r, direction: Direction.Up });
-        break;
+    const candidates = new Map<Direction, { col: number; row: number; score: number }>();
+    for (const cell of occupied) {
+      const neighborChecks: { direction: Direction; col: number; row: number; score: number }[] = [
+        { direction: Direction.Up, col: col + cell.col, row: row + cell.row - 1, score: cell.row * 100 + cell.col },
+        { direction: Direction.Down, col: col + cell.col, row: row + cell.row + 1, score: (rowSpan - cell.row) * 100 + cell.col },
+        { direction: Direction.Left, col: col + cell.col - 1, row: row + cell.row, score: cell.col * 100 + cell.row },
+        { direction: Direction.Right, col: col + cell.col + 1, row: row + cell.row, score: (colSpan - cell.col) * 100 + cell.row },
+      ];
+
+      for (const candidate of neighborChecks) {
+        const localCol = candidate.col - col;
+        const localRow = candidate.row - row;
+        if (occupiedSet.has(this.key(localCol, localRow))) continue;
+        if (!this.isFree(candidate.col, candidate.row)) continue;
+
+        const existing = candidates.get(candidate.direction);
+        if (!existing || candidate.score < existing.score) {
+          candidates.set(candidate.direction, candidate);
+        }
       }
     }
 
-    // Bottom edge: row + rowSpan, across all columns
-    for (let dc = 0; dc < colSpan; dc++) {
-      const c = col + dc;
-      const r = row + rowSpan;
-      if (this.isFree(c, r)) {
-        result.push({ col: c, row: r, direction: Direction.Down });
-        break;
-      }
-    }
-
-    // Left edge: col - 1, across all rows of the span
-    for (let dr = 0; dr < rowSpan; dr++) {
-      const c = col - 1;
-      const r = row + dr;
-      if (this.isFree(c, r)) {
-        result.push({ col: c, row: r, direction: Direction.Left });
-        break;
-      }
-    }
-
-    // Right edge: col + colSpan, across all rows
-    for (let dr = 0; dr < rowSpan; dr++) {
-      const c = col + colSpan;
-      const r = row + dr;
-      if (this.isFree(c, r)) {
-        result.push({ col: c, row: r, direction: Direction.Right });
-        break;
+    for (const direction of [Direction.Up, Direction.Down, Direction.Left, Direction.Right]) {
+      const candidate = candidates.get(direction);
+      if (candidate) {
+        result.push({ col: candidate.col, row: candidate.row, direction });
       }
     }
 

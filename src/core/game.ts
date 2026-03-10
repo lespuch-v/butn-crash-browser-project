@@ -12,8 +12,9 @@ import { MovementSystem } from '../systems/movement-system';
 import { LifetimeSystem } from '../systems/lifetime-system';
 import { SoundSystem } from '../systems/sound-system';
 import { SpawnPreviewState } from '../systems/spawn-preview';
-import { ModifierRegistry, MassSpawnModifier, StyleCopyModifier } from '../modifiers';
+import { ModifierRegistry, LoveBurstModifier, MassSpawnModifier, StyleCopyModifier, TetrominoSpawnModifier } from '../modifiers';
 import type { ModifierContext, Modifier } from '../modifiers';
+import { Direction } from '@models/direction';
 import type { SoundConfig, SoundDefinition } from '@models/sound';
 import {
   DEFAULT_MODIFIER_SHADER,
@@ -60,6 +61,12 @@ export class Game {
   private hudSoundToggle: HTMLButtonElement | null;
   private modifierFlash: HTMLElement | null;
   private modifierFlashTimeout: ReturnType<typeof setTimeout> | null;
+  private modifierChanceSelect: HTMLSelectElement | null;
+  private modifierSelect: HTMLSelectElement | null;
+  private modifierTriggerButton: HTMLButtonElement | null;
+  private modifierChanceOverride: number;
+  private selectedModifierName: string | null;
+  private lastClickedEntityId: number | null;
   private soundEnabled: boolean;
 
   constructor(canvasId: string) {
@@ -85,7 +92,9 @@ export class Game {
     // ── Initialize modifiers ──────────────────
     this.modifierRegistry = new ModifierRegistry();
     this.modifierRegistry.register(MassSpawnModifier);
+    this.modifierRegistry.register(LoveBurstModifier);
     this.modifierRegistry.register(StyleCopyModifier);
+    this.modifierRegistry.register(TetrominoSpawnModifier);
 
     // ── Initialize renderer ───────────────────
     this.renderer = new Renderer(this.canvas, this.entities, this.grid, previewState);
@@ -105,8 +114,15 @@ export class Game {
     this.hudSoundToggle = document.getElementById('sound-toggle') as HTMLButtonElement | null;
     this.modifierFlash = document.getElementById('modifier-flash');
     this.modifierFlashTimeout = null;
+    this.modifierChanceSelect = document.getElementById('modifier-chance-select') as HTMLSelectElement | null;
+    this.modifierSelect = document.getElementById('modifier-select') as HTMLSelectElement | null;
+    this.modifierTriggerButton = document.getElementById('modifier-trigger-button') as HTMLButtonElement | null;
+    this.modifierChanceOverride = MODIFIER_CHANCE;
+    this.selectedModifierName = null;
+    this.lastClickedEntityId = null;
 
     this.setupSoundToggle();
+    this.setupModifierDevPanel();
 
     // ── Wire up events ────────────────────────
     this.setupEventHandlers();
@@ -120,6 +136,7 @@ export class Game {
     this.bus.on('button:clicked', (payload) => {
       const entity = this.entities.get(payload.entityId);
       if (!entity) return;
+      this.lastClickedEntityId = entity.id;
 
       const ctx: ModifierContext = {
         clickedEntity: entity,
@@ -133,11 +150,11 @@ export class Game {
         effects: this.renderer.effects,
       };
 
-      const triggered = this.modifierRegistry.tryExecute(MODIFIER_CHANCE, ctx);
+      const triggered = this.selectedModifierName
+        ? this.modifierRegistry.executeByName(this.selectedModifierName, ctx)
+        : this.modifierRegistry.tryExecute(this.modifierChanceOverride, ctx);
       if (triggered) {
-        this.showModifierFlash(triggered);
-        this.bus.emit('modifier:triggered', { name: triggered.name, entityId: entity.id });
-        this.cameraShake.trigger();
+        this.handleTriggeredModifier(triggered, entity.id);
       }
     });
 
@@ -158,6 +175,77 @@ export class Game {
     if (!this.hudSoundToggle) return;
     this.hudSoundToggle.addEventListener('click', this.handleSoundToggleClick);
     this.updateSoundToggleUI();
+  }
+
+  private setupModifierDevPanel(): void {
+    const modifiers = this.modifierRegistry.getAll();
+
+    if (this.modifierSelect) {
+      for (const modifier of modifiers) {
+        const option = document.createElement('option');
+        option.value = modifier.name;
+        option.textContent = `${modifier.icon} ${modifier.name}`;
+        this.modifierSelect.append(option);
+      }
+
+      this.modifierSelect.addEventListener('change', () => {
+        this.selectedModifierName = this.modifierSelect?.value || null;
+      });
+    }
+
+    if (this.modifierChanceSelect) {
+      this.modifierChanceSelect.value = String(MODIFIER_CHANCE);
+      this.modifierChanceSelect.addEventListener('change', () => {
+        const rawValue = Number(this.modifierChanceSelect?.value ?? MODIFIER_CHANCE);
+        this.modifierChanceOverride = Number.isFinite(rawValue) ? rawValue : MODIFIER_CHANCE;
+      });
+    }
+
+    if (this.modifierTriggerButton) {
+      this.modifierTriggerButton.addEventListener('click', this.handleManualModifierTrigger);
+    }
+  }
+
+  private handleManualModifierTrigger = (): void => {
+    const fallbackEntity = this.entities.query('interactive', 'gridCell')[0];
+    const targetId = this.lastClickedEntityId ?? fallbackEntity?.id ?? null;
+    if (targetId === null) return;
+
+    const entity = this.entities.get(targetId);
+    const gridCell = entity?.gridCell;
+    if (!entity || !gridCell) return;
+
+    const ctx: ModifierContext = {
+      clickedEntity: entity,
+      col: gridCell.col,
+      row: gridCell.row,
+      direction: gridCell.colSpan > 1 ? Direction.Right : Direction.Down,
+      entities: this.entities,
+      grid: this.grid,
+      bus: this.bus,
+      spawner: this.spawnSystem,
+      effects: this.renderer.effects,
+    };
+
+    const modifierName = this.selectedModifierName;
+    const triggered = modifierName
+      ? this.modifierRegistry.executeByName(modifierName, ctx)
+      : this.modifierRegistry.roll();
+
+    if (!triggered) return;
+
+    if (!modifierName) {
+      triggered.execute(ctx);
+    }
+
+    this.handleTriggeredModifier(triggered, entity.id);
+    this.lastClickedEntityId = entity.id;
+  };
+
+  private handleTriggeredModifier(modifier: Modifier, entityId: number): void {
+    this.showModifierFlash(modifier);
+    this.bus.emit('modifier:triggered', { name: modifier.name, entityId });
+    this.cameraShake.trigger();
   }
 
   private handleSoundToggleClick = (): void => {

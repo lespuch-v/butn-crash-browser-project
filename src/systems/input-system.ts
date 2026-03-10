@@ -120,8 +120,8 @@ export class InputSystem {
       // Update spawn previews if hovering a new button (span-aware)
       if (entityId !== this.previewState.sourceEntityId && entity?.gridCell) {
         const gc = entity.gridCell;
-        const freeNeighbors = this.grid.freeNeighborsAroundSpan(
-          gc.col, gc.row, gc.colSpan, gc.rowSpan,
+        const freeNeighbors = this.grid.freeNeighborsAroundShape(
+          gc.col, gc.row, gc.colSpan, gc.rowSpan, gc.occupiedCells,
         );
         this.previewState.update(
           freeNeighbors.map((n) => ({ col: n.col, row: n.row, direction: n.direction })),

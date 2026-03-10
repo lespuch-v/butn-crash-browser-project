@@ -1,5 +1,6 @@
 import type { Entity } from '@ecs/entity';
 import type { ButtonStyle, ButtonShape, ButtonContent } from '@models/button-style';
+import type { GridCellOffset } from '@ecs/components/grid-cell';
 import { BUTTON_PADDING } from '../constants';
 
 const TAU = Math.PI * 2;
@@ -14,6 +15,8 @@ function buildShapePath(
   w: number,
   h: number,
   borderRadius: number,
+  occupiedCells?: GridCellOffset[],
+  cellSize?: number,
 ): void {
   const hw = w / 2;
   const hh = h / 2;
@@ -100,6 +103,35 @@ function buildShapePath(
       ctx.closePath();
       break;
     }
+
+    case 'heart': {
+      const s = Math.min(hw, hh) * 0.9;
+      ctx.moveTo(0, s * 0.8);                                          // bottom tip
+      ctx.bezierCurveTo(-s * 0.8, s * 0.2, -s, -s * 0.2, -s * 0.8, -s * 0.5);  // → left lobe peak
+      ctx.bezierCurveTo(-s * 0.6, -s * 0.8, -s * 0.2, -s * 0.8, 0, -s * 0.5);  // → center dip
+      ctx.bezierCurveTo(s * 0.2, -s * 0.8, s * 0.6, -s * 0.8, s * 0.8, -s * 0.5); // → right lobe peak
+      ctx.bezierCurveTo(s, -s * 0.2, s * 0.8, s * 0.2, 0, s * 0.8);             // → bottom tip
+      ctx.closePath();
+      break;
+    }
+
+    case 'tetromino': {
+      if (!occupiedCells?.length || !cellSize) {
+        ctx.roundRect(-hw, -hh, w, h, borderRadius);
+        break;
+      }
+
+      const localCellSize = cellSize - BUTTON_PADDING * 2;
+      const originX = -hw;
+      const originY = -hh;
+
+      for (const cell of occupiedCells) {
+        const x = originX + cell.col * cellSize + BUTTON_PADDING;
+        const y = originY + cell.row * cellSize + BUTTON_PADDING;
+        ctx.roundRect(x, y, localCellSize, localCellSize, borderRadius);
+      }
+      break;
+    }
   }
 }
 
@@ -183,7 +215,7 @@ export function renderButton(
 
   // Fill
   ctx.fillStyle = isHovered ? style.hoverFillColor : style.fillColor;
-  buildShapePath(ctx, shape, w, h, style.borderRadius);
+  buildShapePath(ctx, shape, w, h, style.borderRadius, gridCell?.occupiedCells, cellSize);
   ctx.fill();
 
   // Border

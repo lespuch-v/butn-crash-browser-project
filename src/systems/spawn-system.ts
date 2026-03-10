@@ -8,7 +8,14 @@ import { createDefaultSpecies } from '@ecs/components/species';
 import { createAnimation, AnimationType } from '@ecs/components/animation';
 import { randomStyle, computeSpan, type ButtonStyle } from '@models/button-style';
 import { randomDirection, type Direction } from '@models/direction';
+import type { GridCellOffset } from '@ecs/components/grid-cell';
 import { SPAWN_ANIM_DURATION_MS } from '../constants';
+
+interface ShapeSpawnOptions {
+  colSpan?: number;
+  rowSpan?: number;
+  occupiedCells?: GridCellOffset[];
+}
 
 /**
  * Handles spawning button entities onto the grid.
@@ -128,17 +135,30 @@ export class SpawnSystem {
 
   /** Spawn a button at a specific grid cell (anchor = top-left of span) */
   spawnButton(col: number, row: number, style?: ButtonStyle): Entity | null {
-    const resolvedStyle = style ?? randomStyle();
-    const { colSpan, rowSpan } = computeSpan(resolvedStyle.width, resolvedStyle.height);
+    return this.spawnShapedButton(col, row, style);
+  }
 
-    // Validate that the full span is free
-    if (!this.grid.isSpanFree(col, row, colSpan, rowSpan)) {
+  /** Spawn a button with an optional irregular occupied-cell mask inside its bounding box. */
+  spawnShapedButton(
+    col: number,
+    row: number,
+    style?: ButtonStyle,
+    options?: ShapeSpawnOptions,
+  ): Entity | null {
+    const resolvedStyle = style ?? randomStyle();
+    const inferredSpan = computeSpan(resolvedStyle.width, resolvedStyle.height);
+    const colSpan = options?.colSpan ?? inferredSpan.colSpan;
+    const rowSpan = options?.rowSpan ?? inferredSpan.rowSpan;
+    const occupiedCells = options?.occupiedCells;
+
+    // Validate that the shape is free
+    if (!this.grid.isShapeFree(col, row, colSpan, rowSpan, occupiedCells)) {
       // Fallback: clamp dimensions to fit a single cell
-      if (colSpan > 1 || rowSpan > 1) {
+      if ((colSpan > 1 || rowSpan > 1) && !occupiedCells) {
         if (!this.grid.isFree(col, row)) return null;
         resolvedStyle.width = Math.min(resolvedStyle.width, 56);
         resolvedStyle.height = Math.min(resolvedStyle.height, 56);
-        return this.spawnButton(col, row, resolvedStyle);
+        return this.spawnShapedButton(col, row, resolvedStyle);
       }
       return null;
     }
@@ -148,7 +168,7 @@ export class SpawnSystem {
 
     // Attach components
     entity.position = { x: pixel.x, y: pixel.y };
-    entity.gridCell = { col, row, colSpan, rowSpan };
+    entity.gridCell = { col, row, colSpan, rowSpan, occupiedCells };
     entity.renderable = createDefaultRenderable(resolvedStyle);
     entity.interactive = createDefaultInteractive();
     entity.species = createDefaultSpecies();
@@ -158,7 +178,7 @@ export class SpawnSystem {
     entity.renderable.scale = 0;
 
     // Register in grid across all cells of the span
-    this.grid.setSpan(col, row, colSpan, rowSpan, entity.id);
+    this.grid.setShape(col, row, colSpan, rowSpan, entity.id, occupiedCells);
 
     this.bus.emit('button:spawned', { entityId: entity.id, col, row });
 

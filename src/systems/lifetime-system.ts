@@ -23,7 +23,7 @@ export class LifetimeSystem {
         // Remove from grid if it has a grid cell (span-aware)
         if (entity.gridCell) {
           const gc = entity.gridCell;
-          this.grid.removeSpan(gc.col, gc.row, gc.colSpan, gc.rowSpan);
+          this.grid.removeShape(gc.col, gc.row, gc.colSpan, gc.rowSpan, gc.occupiedCells);
           this.bus.emit('button:destroyed', {
             entityId: entity.id,
             col: gc.col,

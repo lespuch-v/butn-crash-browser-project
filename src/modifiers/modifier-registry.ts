@@ -38,6 +38,22 @@ export class ModifierRegistry {
     return modifier;
   }
 
+  getByName(name: string): Modifier | null {
+    return this.modifiers.find((modifier) => modifier.name === name) ?? null;
+  }
+
+  executeByName(name: string, ctx: ModifierContext): Modifier | null {
+    const modifier = this.getByName(name);
+    if (!modifier) return null;
+
+    modifier.execute(ctx);
+    return modifier;
+  }
+
+  getAll(): Modifier[] {
+    return [...this.modifiers];
+  }
+
   /** Get all registered modifier names */
   list(): string[] {
     return this.modifiers.map((m) => `${m.icon} ${m.name} (weight: ${m.weight})`);

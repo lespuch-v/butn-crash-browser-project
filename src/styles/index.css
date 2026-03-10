@@ -196,6 +196,92 @@ body {
   transform: translateX(-50%) translateY(0) scale(1);
 }
 
+#modifier-dev-panel {
+  position: absolute;
+  top: 92px;
+  right: 14px;
+  z-index: 45;
+  width: min(240px, calc(100vw - 28px));
+  padding: 12px;
+  border: 1px solid rgba(125, 211, 252, 0.22);
+  border-radius: 16px;
+  background:
+    linear-gradient(145deg, rgba(8, 14, 34, 0.82), rgba(12, 20, 46, 0.74)),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05), transparent 40%);
+  box-shadow:
+    0 16px 36px rgba(2, 8, 23, 0.42),
+    inset 0 1px 0 rgba(191, 219, 254, 0.14);
+  backdrop-filter: blur(14px) saturate(130%);
+  -webkit-backdrop-filter: blur(14px) saturate(130%);
+  display: grid;
+  gap: 10px;
+}
+
+.dev-panel-title {
+  color: var(--text-primary);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.dev-field {
+  display: grid;
+  gap: 6px;
+}
+
+.dev-label {
+  color: var(--text-muted);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+#modifier-dev-panel select,
+#modifier-dev-panel button {
+  width: 100%;
+  border: 1px solid rgba(148, 163, 184, 0.34);
+  border-radius: 10px;
+  background: rgba(15, 23, 42, 0.78);
+  color: var(--text-primary);
+  font: inherit;
+}
+
+#modifier-dev-panel select {
+  padding: 9px 10px;
+}
+
+#modifier-dev-panel button {
+  padding: 10px 12px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background:
+    linear-gradient(135deg, rgba(14, 165, 233, 0.26), rgba(59, 130, 246, 0.18)),
+    rgba(15, 23, 42, 0.82);
+}
+
+#modifier-dev-panel button:hover,
+#modifier-dev-panel select:hover {
+  border-color: rgba(125, 211, 252, 0.55);
+}
+
+#modifier-dev-panel button:active {
+  transform: translateY(1px);
+}
+
+@media (max-width: 720px) {
+  #modifier-dev-panel {
+    top: auto;
+    right: 14px;
+    left: 14px;
+    bottom: 88px;
+    width: auto;
+  }
+}
+
 /* Shader library: pick one class per modifier */
 
 #modifier-flash.shader-prismatic-hologram {

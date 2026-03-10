@@ -7,7 +7,9 @@ export type ButtonShape =
   | 'hexagon'
   | 'star'
   | 'cross'
-  | 'triangle';
+  | 'triangle'
+  | 'heart'
+  | 'tetromino';
 
 // Span computation
 export interface ButtonSpan {

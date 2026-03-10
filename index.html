@@ -37,6 +37,28 @@
 
     <div id="modifier-flash"></div>
 
+    <section id="modifier-dev-panel" aria-label="Modifier dev controls">
+      <div class="dev-panel-title">Modifier Lab</div>
+
+      <label class="dev-field">
+        <span class="dev-label">Chance</span>
+        <select id="modifier-chance-select">
+          <option value="0">0%</option>
+          <option value="0.25" selected>25%</option>
+          <option value="1">100%</option>
+        </select>
+      </label>
+
+      <label class="dev-field">
+        <span class="dev-label">Modifier</span>
+        <select id="modifier-select">
+          <option value="">Random</option>
+        </select>
+      </label>
+
+      <button id="modifier-trigger-button" type="button">Trigger On Selected</button>
+    </section>
+
     <div id="debug-panel">
       <div>Entities: <span id="debug-entities">0</span></div>
     </div>
