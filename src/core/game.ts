@@ -16,7 +16,7 @@ import { SpawnPreviewState } from '../systems/spawn-preview';
 import { EvasionModifier, ModifierRegistry, LoveBurstModifier, MassSpawnModifier, StyleCopyModifier, TetrominoSpawnModifier } from '../modifiers';
 import type { ModifierContext, Modifier } from '../modifiers';
 import { Direction } from '@models/direction';
-import type { SoundConfig, SoundDefinition } from '@models/sound';
+import type { SoundConfig, SoundConfigUpdate, SoundDefinition } from '@models/sound';
 import {
   DEFAULT_MODIFIER_SHADER,
   MODIFIER_SHADER_CLASSES,
@@ -347,12 +347,20 @@ export class Game {
     this.soundSystem.setMasterVolume(volume);
   }
 
-  configureSounds(config: Partial<SoundConfig>): void {
+  configureSounds(config: SoundConfigUpdate): void {
     this.soundSystem.configure(config);
     if (typeof config.enabled === 'boolean') {
       this.soundEnabled = config.enabled;
       this.updateSoundToggleUI();
     }
+  }
+
+  setBackgroundMusic(src: string | null): void {
+    this.soundSystem.setBackgroundMusic(src);
+  }
+
+  setMusicVolume(volume: number): void {
+    this.soundSystem.setMusicVolume(volume);
   }
 
   registerModifierSound(modifierName: string, sound: SoundDefinition): void {
