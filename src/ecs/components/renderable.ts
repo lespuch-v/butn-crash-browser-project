@@ -1,3 +1,4 @@
+import type { ButtonShaderPreset } from '@models/button-shader';
 import type { ButtonStyle } from '@models/button-style';
 
 /** How this entity should be drawn */
@@ -7,6 +8,7 @@ export interface RenderableComponent {
   opacity: number; // 0-1
   rotation: number; // radians, for spin effects
   visible: boolean;
+  shader?: ButtonShaderPreset;
 }
 
 export function createDefaultRenderable(style: ButtonStyle): RenderableComponent {

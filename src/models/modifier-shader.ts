@@ -21,7 +21,7 @@ export function toModifierShaderClass(shader: ModifierShaderPreset): string {
 }
 
 /**
- * Deterministic fallback so every modifier name maps to one of the six presets.
+ * Deterministic fallback so every modifier name maps to one of the flash presets.
  */
 export function shaderFromModifierName(modifierName: string): ModifierShaderPreset {
   let hash = 0;

@@ -5,6 +5,10 @@ export interface SpeciesComponent {
   type: SpeciesType;
 }
 
+export function createSpecies(type: SpeciesType = ST.Normal): SpeciesComponent {
+  return { type };
+}
+
 export function createDefaultSpecies(): SpeciesComponent {
-  return { type: ST.Normal };
+  return createSpecies();
 }

@@ -1,5 +1,6 @@
 export * from './direction';
 export * from './button-style';
+export * from './button-shader';
 export * from './species';
 export * from './events';
 export * from './game-config';

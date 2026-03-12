@@ -15,6 +15,7 @@ export const CLICK_SCALE = 0.92;
 
 // ── Gameplay ──────────────────────────────────────
 export const MODIFIER_CHANCE = 0.25; // 25% chance on each click
+export const SHADER_BUTTON_CHANCE = 0.08; // rare chance that a spawned button gets a shader variant
 export const SPAWN_ANIM_DURATION_MS = 200;
 export const CLICK_ANIM_DURATION_MS = 150;
 

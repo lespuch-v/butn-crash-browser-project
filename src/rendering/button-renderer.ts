@@ -1,9 +1,16 @@
-import type { Entity } from '@ecs/entity';
-import type { ButtonStyle, ButtonShape, ButtonContent } from '@models/button-style';
 import type { GridCellOffset } from '@ecs/components/grid-cell';
+import type { Entity } from '@ecs/entity';
+import type { ButtonShaderPreset } from '@models/button-shader';
+import { getButtonShader } from '@models/button-shader';
+import type { ButtonContent, ButtonShape, ButtonStyle } from '@models/button-style';
+import { buttonShaderRenderer } from './button-shader-renderer';
 import { BUTTON_PADDING } from '../constants';
 
 const TAU = Math.PI * 2;
+
+function shaderAccent(shader: ButtonShaderPreset): string {
+  return getButtonShader(shader).accentColor;
+}
 
 /**
  * Builds a canvas path for the given shape, centered at (0, 0).
@@ -73,7 +80,6 @@ function buildShapePath(
     }
 
     case 'cross': {
-      // Plus shape: the arm thickness is 1/3 of the dimension
       const ax = hw;
       const ay = hh;
       const tx = hw * 0.35;
@@ -95,7 +101,6 @@ function buildShapePath(
     }
 
     case 'triangle': {
-      // Equilateral-ish triangle pointing up
       const r = Math.min(hw, hh);
       ctx.moveTo(0, -r);
       ctx.lineTo(r * Math.cos(Math.PI / 6), r * Math.sin(Math.PI / 6));
@@ -106,11 +111,11 @@ function buildShapePath(
 
     case 'heart': {
       const s = Math.min(hw, hh) * 0.9;
-      ctx.moveTo(0, s * 0.8);                                          // bottom tip
-      ctx.bezierCurveTo(-s * 0.8, s * 0.2, -s, -s * 0.2, -s * 0.8, -s * 0.5);  // → left lobe peak
-      ctx.bezierCurveTo(-s * 0.6, -s * 0.8, -s * 0.2, -s * 0.8, 0, -s * 0.5);  // → center dip
-      ctx.bezierCurveTo(s * 0.2, -s * 0.8, s * 0.6, -s * 0.8, s * 0.8, -s * 0.5); // → right lobe peak
-      ctx.bezierCurveTo(s, -s * 0.2, s * 0.8, s * 0.2, 0, s * 0.8);             // → bottom tip
+      ctx.moveTo(0, s * 0.8);
+      ctx.bezierCurveTo(-s * 0.8, s * 0.2, -s, -s * 0.2, -s * 0.8, -s * 0.5);
+      ctx.bezierCurveTo(-s * 0.6, -s * 0.8, -s * 0.2, -s * 0.8, 0, -s * 0.5);
+      ctx.bezierCurveTo(s * 0.2, -s * 0.8, s * 0.6, -s * 0.8, s * 0.8, -s * 0.5);
+      ctx.bezierCurveTo(s, -s * 0.2, s * 0.8, s * 0.2, 0, s * 0.8);
       ctx.closePath();
       break;
     }
@@ -135,19 +140,15 @@ function buildShapePath(
   }
 }
 
-/**
- * Draws the content (text/emoji/symbol) on top of a button.
- */
 function drawContent(
   ctx: CanvasRenderingContext2D,
   style: ButtonStyle,
   w: number,
   h: number,
   opacity: number,
+  shader?: ButtonShaderPreset,
 ): void {
   const content: ButtonContent | undefined = style.content;
-
-  // Legacy fallback: use icon field if no content object
   const text = content?.text ?? style.icon;
   if (!text) return;
 
@@ -163,7 +164,11 @@ function drawContent(
     ctx.rotate(contentRotation);
   }
 
-  ctx.globalAlpha = opacity * 0.9;
+  ctx.globalAlpha = opacity * 0.92;
+  if (shader) {
+    ctx.shadowBlur = 12;
+    ctx.shadowColor = shaderAccent(shader);
+  }
   ctx.font = `${fontSize}px ${fontFamily}`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
@@ -175,7 +180,7 @@ function drawContent(
 
 /**
  * Draws a single button entity on the canvas.
- * Supports variable shapes, sizes, and content.
+ * Supports variable shapes, sizes, content, and optional WebGL shader overlays.
  */
 export function renderButton(
   ctx: CanvasRenderingContext2D,
@@ -185,51 +190,51 @@ export function renderButton(
   const { position, renderable, interactive, gridCell } = entity;
   if (!position || !renderable || !renderable.visible) return;
 
-  const { style, scale, opacity, rotation } = renderable;
+  const { style, scale, opacity, rotation, shader } = renderable;
   const isHovered = interactive?.hovered ?? false;
 
-  // Use per-button dimensions, falling back to legacy grid-sized square
   const fallbackSize = cellSize - BUTTON_PADDING * 2;
   const w = style.width ?? fallbackSize;
   const h = style.height ?? fallbackSize;
   const shape: ButtonShape = style.shape ?? 'rect';
 
-  // Center within the entity's span area (multi-cell support)
   const colSpan = gridCell?.colSpan ?? 1;
   const rowSpan = gridCell?.rowSpan ?? 1;
   const centerX = position.x + (colSpan * cellSize) / 2;
   const centerY = position.y + (rowSpan * cellSize) / 2;
 
   ctx.save();
-
-  // Transform from center
   ctx.translate(centerX, centerY);
   ctx.rotate(rotation);
   ctx.scale(scale, scale);
   ctx.globalAlpha = opacity;
 
-  // Shadow with depth
-  ctx.shadowBlur = style.shadowBlur + 4;
-  ctx.shadowColor = style.shadowColor;
+  ctx.shadowBlur = style.shadowBlur + (shader ? 10 : 4);
+  ctx.shadowColor = shader ? shaderAccent(shader) : style.shadowColor;
   ctx.shadowOffsetY = 2;
 
-  // Fill
   ctx.fillStyle = isHovered ? style.hoverFillColor : style.fillColor;
   buildShapePath(ctx, shape, w, h, style.borderRadius, gridCell?.occupiedCells, cellSize);
   ctx.fill();
 
-  // Border
+  if (shader) {
+    ctx.save();
+    buildShapePath(ctx, shape, w, h, style.borderRadius, gridCell?.occupiedCells, cellSize);
+    ctx.clip();
+    buttonShaderRenderer.render(ctx, shader, -w / 2, -h / 2, w, h);
+    ctx.restore();
+  }
+
   ctx.shadowBlur = 0;
   ctx.shadowOffsetY = 0;
-  ctx.strokeStyle = style.borderColor;
-  ctx.lineWidth = style.borderWidth;
+  ctx.strokeStyle = shader ? shaderAccent(shader) : style.borderColor;
+  ctx.lineWidth = shader ? style.borderWidth + 0.6 : style.borderWidth;
   ctx.lineJoin = 'round';
+  buildShapePath(ctx, shape, w, h, style.borderRadius, gridCell?.occupiedCells, cellSize);
   if (style.borderWidth > 0) {
     ctx.stroke();
   }
 
-  // Content
-  drawContent(ctx, style, w, h, opacity);
-
+  drawContent(ctx, style, w, h, opacity, shader);
   ctx.restore();
 }

@@ -1,6 +1,7 @@
 export enum SpeciesType {
   Normal = 'normal',
-  // Future species — add as we build modifiers
+  Shadered = 'shadered',
+  // Future species - add as we build modifiers
   // Explosive = 'explosive',
   // Sticky = 'sticky',
   // Ghost = 'ghost',
@@ -20,5 +21,11 @@ export const SPECIES_TRAITS: Record<SpeciesType, SpeciesTraits> = {
     canBeClicked: true,
     spawnsOnClick: true,
     chainReacts: false,
+  },
+  [SpeciesType.Shadered]: {
+    type: SpeciesType.Shadered,
+    canBeClicked: true,
+    spawnsOnClick: true,
+    chainReacts: true,
   },
 };

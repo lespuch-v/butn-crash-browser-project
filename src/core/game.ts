@@ -14,7 +14,7 @@ import { ExplosionSystem } from '../systems/explosion-system';
 import { LifetimeSystem } from '../systems/lifetime-system';
 import { SoundSystem } from '../systems/sound-system';
 import { SpawnPreviewState } from '../systems/spawn-preview';
-import { EvasionModifier, ExplosionClusterModifier, ModifierRegistry, LoveBurstModifier, MassSpawnModifier, StyleCopyModifier, TetrominoSpawnModifier } from '../modifiers';
+import { EvasionModifier, ExplosionClusterModifier, ModifierRegistry, LoveBurstModifier, MassSpawnModifier, ShaderInfusionModifier, StyleCopyModifier, TetrominoSpawnModifier } from '../modifiers';
 import type { ModifierContext, Modifier } from '../modifiers';
 import { Direction } from '@models/direction';
 import type { SoundConfig, SoundConfigUpdate, SoundDefinition } from '@models/sound';
@@ -100,6 +100,7 @@ export class Game {
     this.modifierRegistry.register(EvasionModifier);
     this.modifierRegistry.register(MassSpawnModifier);
     this.modifierRegistry.register(LoveBurstModifier);
+    this.modifierRegistry.register(ShaderInfusionModifier);
     this.modifierRegistry.register(StyleCopyModifier);
     this.modifierRegistry.register(TetrominoSpawnModifier);
     this.modifierRegistry.register(ExplosionClusterModifier);
@@ -185,7 +186,9 @@ export class Game {
     const centerWorldX = this.canvas.cameraX + this.canvas.width / 2;
     const centerWorldY = this.canvas.cameraY + this.canvas.height / 2;
     const { col: centerCol, row: centerRow } = this.grid.pixelToCell(centerWorldX, centerWorldY);
-    this.spawnSystem.spawnButton(centerCol, centerRow, retroInitialStyle());
+    this.spawnSystem.spawnButton(centerCol, centerRow, retroInitialStyle(), {
+      allowShaderVariant: false,
+    });
   }
 
   private setupSoundToggle(): void {
