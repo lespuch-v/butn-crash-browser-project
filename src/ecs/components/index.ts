@@ -6,3 +6,4 @@ export * from './species';
 export * from './lifetime';
 export * from './interactive';
 export * from './animation';
+export * from './explosive';

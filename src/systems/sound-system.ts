@@ -1,5 +1,6 @@
 import type { EventBus } from '@core/event-bus';
 import {
+  DEFAULT_EXPLOSION_SOUND,
   DEFAULT_SOUND_CONFIG,
   type NoiseSpec,
   type SoundConfig,
@@ -57,6 +58,7 @@ export class SoundSystem {
 
     this.unsubscribers.push(this.bus.on('button:clicked', () => this.playClick()));
     this.unsubscribers.push(this.bus.on('modifier:triggered', ({ name }) => this.playModifier(name)));
+    this.unsubscribers.push(this.bus.on('effect:explosion', () => this.playExplosion()));
   }
 
   private ensureAudioGraph(): { ctx: AudioContext; master: GainNode } | null {
@@ -437,6 +439,10 @@ export class SoundSystem {
 
     const sound = fuzzyMatch ?? this.config.defaultModifierSound;
     this.play(sound);
+  }
+
+  playExplosion(): void {
+    this.play(DEFAULT_EXPLOSION_SOUND);
   }
 
   setEnabled(enabled: boolean): void {

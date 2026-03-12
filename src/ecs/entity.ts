@@ -6,6 +6,7 @@ import type { SpeciesComponent } from './components/species';
 import type { LifetimeComponent } from './components/lifetime';
 import type { InteractiveComponent } from './components/interactive';
 import type { AnimationComponent } from './components/animation';
+import type { ExplosiveComponent } from './components/explosive';
 
 /**
  * An entity is just an ID + optional components.
@@ -25,4 +26,5 @@ export interface Entity {
   lifetime?: LifetimeComponent;
   interactive?: InteractiveComponent;
   animation?: AnimationComponent;
+  explosive?: ExplosiveComponent;
 }

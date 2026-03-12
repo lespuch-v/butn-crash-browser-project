@@ -10,10 +10,11 @@ import { SpawnSystem } from '../systems/spawn-system';
 import { AnimationSystem } from '../systems/animation-system';
 import { EvasionSystem } from '../systems/evasion-system';
 import { MovementSystem } from '../systems/movement-system';
+import { ExplosionSystem } from '../systems/explosion-system';
 import { LifetimeSystem } from '../systems/lifetime-system';
 import { SoundSystem } from '../systems/sound-system';
 import { SpawnPreviewState } from '../systems/spawn-preview';
-import { EvasionModifier, ModifierRegistry, LoveBurstModifier, MassSpawnModifier, StyleCopyModifier, TetrominoSpawnModifier } from '../modifiers';
+import { EvasionModifier, ExplosionClusterModifier, ModifierRegistry, LoveBurstModifier, MassSpawnModifier, StyleCopyModifier, TetrominoSpawnModifier } from '../modifiers';
 import type { ModifierContext, Modifier } from '../modifiers';
 import { Direction } from '@models/direction';
 import type { SoundConfig, SoundConfigUpdate, SoundDefinition } from '@models/sound';
@@ -45,6 +46,7 @@ export class Game {
   private animationSystem: AnimationSystem;
   private evasionSystem: EvasionSystem;
   private movementSystem: MovementSystem;
+  private explosionSystem: ExplosionSystem;
   private lifetimeSystem: LifetimeSystem;
   private soundSystem: SoundSystem;
 
@@ -87,6 +89,7 @@ export class Game {
     this.animationSystem = new AnimationSystem(this.entities);
     this.evasionSystem = new EvasionSystem(this.bus, this.entities, this.grid);
     this.movementSystem = new MovementSystem(this.entities);
+    this.explosionSystem = new ExplosionSystem(this.bus, this.entities, this.grid);
     this.lifetimeSystem = new LifetimeSystem(this.bus, this.entities, this.grid);
     this.soundSystem = new SoundSystem(this.bus);
     this.soundEnabled = false;
@@ -99,6 +102,7 @@ export class Game {
     this.modifierRegistry.register(LoveBurstModifier);
     this.modifierRegistry.register(StyleCopyModifier);
     this.modifierRegistry.register(TetrominoSpawnModifier);
+    this.modifierRegistry.register(ExplosionClusterModifier);
 
     // ── Initialize renderer ───────────────────
     this.renderer = new Renderer(this.canvas, this.entities, this.grid, previewState);
@@ -165,6 +169,15 @@ export class Game {
     // Listen for particle effect requests
     this.bus.on('effect:particles', (payload) => {
       this.renderer.effects.emit(payload.x, payload.y, payload.color, payload.count);
+    });
+    this.bus.on('effect:explosion', (payload) => {
+      const center = this.grid.cellCenter(payload.col, payload.row);
+      const particleCount = 22 + payload.radius * 10;
+
+      this.renderer.effects.emit(center.x, center.y, '#ffe08a', Math.max(12, particleCount - 8));
+      this.renderer.effects.emit(center.x, center.y, '#ff9f43', particleCount);
+      this.renderer.effects.emit(center.x, center.y, '#ef4444', Math.max(16, particleCount - 4));
+      this.cameraShake.trigger({ intensity: Math.min(1, 0.2 + payload.radius * 0.18) });
     });
   }
 
@@ -294,6 +307,7 @@ export class Game {
     this.animationSystem.update(dt);
     this.evasionSystem.update(dt);
     this.movementSystem.update(dt);
+    this.explosionSystem.update(dt);
     this.lifetimeSystem.update(dt);
     this.renderer.updateEffects(dt);
 

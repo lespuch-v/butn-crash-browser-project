@@ -142,6 +142,54 @@ export const DEFAULT_MODIFIER_SOUND: SoundDefinition = {
   ],
 };
 
+export const DEFAULT_EXPLOSION_SOUND: SoundDefinition = {
+  tones: [
+    {
+      waveform: 'sawtooth',
+      frequency: 92,
+      frequencyEnd: 38,
+      durationMs: 240,
+      volume: 0.2,
+      attackMs: 2,
+      releaseMs: 180,
+      detuneJitterCents: 10,
+    },
+    {
+      waveform: 'triangle',
+      frequency: 210,
+      frequencyEnd: 74,
+      durationMs: 180,
+      delayMs: 18,
+      volume: 0.14,
+      attackMs: 2,
+      releaseMs: 120,
+    },
+  ],
+  noiseBursts: [
+    {
+      durationMs: 120,
+      volume: 0.085,
+      attackMs: 1,
+      releaseMs: 90,
+      filterType: 'lowpass',
+      filterFrequency: 900,
+      filterFrequencyEnd: 260,
+      q: 0.7,
+    },
+    {
+      durationMs: 70,
+      delayMs: 24,
+      volume: 0.05,
+      attackMs: 1,
+      releaseMs: 52,
+      filterType: 'bandpass',
+      filterFrequency: 1800,
+      filterFrequencyEnd: 1100,
+      q: 1.3,
+    },
+  ],
+};
+
 export const DEFAULT_MODIFIER_SOUND_MAP: Record<string, SoundDefinition> = {
   'Mass Spawn!': {
     tones: [
@@ -379,6 +427,42 @@ export const DEFAULT_MODIFIER_SOUND_MAP: Record<string, SoundDefinition> = {
         filterFrequency: 1400,
         filterFrequencyEnd: 1900,
         q: 2.4,
+      },
+    ],
+  },
+  'Blast Zone!': {
+    tones: [
+      {
+        waveform: 'square',
+        frequency: 330,
+        frequencyEnd: 180,
+        durationMs: 110,
+        volume: 0.1,
+        attackMs: 3,
+        releaseMs: 74,
+      },
+      {
+        waveform: 'triangle',
+        frequency: 210,
+        frequencyEnd: 96,
+        durationMs: 170,
+        delayMs: 26,
+        volume: 0.12,
+        attackMs: 2,
+        releaseMs: 126,
+      },
+    ],
+    noiseBursts: [
+      {
+        durationMs: 58,
+        delayMs: 16,
+        volume: 0.04,
+        attackMs: 1,
+        releaseMs: 42,
+        filterType: 'bandpass',
+        filterFrequency: 1500,
+        filterFrequencyEnd: 800,
+        q: 1.5,
       },
     ],
   },
